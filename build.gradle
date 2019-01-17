@@ -10,13 +10,17 @@ buildscript {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
 	}
 }
 
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
+apply plugin: 'com.google.protobuf'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+
+compileKotlin.dependsOn ':generateProto'
 
 group = ' com.lykke'
 version = '0.0.1-SNAPSHOT'
@@ -26,6 +30,10 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+    protobuf_version = '3.6.0'
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
@@ -33,6 +41,8 @@ dependencies {
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 	implementation "org.jetbrains.kotlin:kotlin-reflect"
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	compile "com.google.protobuf:protobuf-java:$protobuf_version"
 }
 
 compileKotlin {
@@ -47,4 +57,16 @@ compileTestKotlin {
 		freeCompilerArgs = ['-Xjsr305=strict']
 		jvmTarget = '1.8'
 	}
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobuf_version"
+    }
+
+    generateProtoTasks.generatedFilesBaseDir = 'src'
+
+    generateProtoTasks {
+        ofSourceSet('main')
+    }
 }

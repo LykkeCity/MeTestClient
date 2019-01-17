@@ -25,3 +25,5 @@ gradle
 /dist/
 /nbdist/
 /.nb-gradle/
+
+ProtocolMessages.java
