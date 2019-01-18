@@ -7,7 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
+import java.lang.IllegalArgumentException
 import java.lang.reflect.Method
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Future
 
 @Component
 class TestsRunnerServiceImpl : TestsRunnerService {
@@ -29,16 +33,43 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                 }
             })
 
+    private val testFutureBySessionId = ConcurrentHashMap<String, Future<*>>()
+
     @Autowired
     private lateinit var testRunnerThreadPool: ThreadPoolTaskExecutor
 
     @Autowired
     private lateinit var applicationContext: ApplicationContext
 
-    override fun run(testMethods: List<Method>, runPolicy: RunTestsPolicy) {
-        testRunnerThreadPool.execute {
-            testMethods.forEach { invokeMethod(it, runPolicy) }
+    override fun run(testMethods: List<Method>, runPolicy: RunTestsPolicy): String {
+        val sessionId = UUID.randomUUID().toString()
+        val testFuture = testRunnerThreadPool.submit {
+            testMethods.forEach {
+                if (Thread.interrupted()) {
+                    testFutureBySessionId.remove(sessionId)
+                    logger.info("Session: $sessionId was stopped")
+                    Thread.currentThread().interrupt()
+                    return@forEach
+                }
+                invokeMethod(it, runPolicy)
+            }
+            testFutureBySessionId.remove(sessionId)
         }
+
+        testFutureBySessionId[sessionId] = testFuture
+        logger.info("Started to run tests sessionId: $sessionId, run policy: $runPolicy")
+        return sessionId
+    }
+
+    override fun stop(sessionId: String) {
+        val testsFuture = testFutureBySessionId[sessionId]
+                ?: throw IllegalArgumentException("Session with id: $sessionId does not exist")
+        val cancelStatus = testsFuture.cancel(true)
+        logger.info("Test session: $sessionId, was cancelled $cancelStatus")
+    }
+
+    override fun getAllTestSessionIds(): Set<String> {
+        return testFutureBySessionId.keys
     }
 
     private fun invokeMethod(method: Method, runPolicy: RunTestsPolicy) {

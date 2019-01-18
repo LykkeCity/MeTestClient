@@ -1,4 +1,4 @@
-package com.lykke.me.test.client.web
+package com.lykke.me.test.client.web.controllers
 
 import com.lykke.me.test.client.service.TestsService
 import com.lykke.me.test.client.web.dto.RunTestsRequest
@@ -7,11 +7,18 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiResponse
 import io.swagger.annotations.ApiResponses
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.util.CollectionUtils
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.lang.IllegalArgumentException
+import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
 @RestController
@@ -44,5 +51,31 @@ class TestsController {
                 testService.startTests(runTestsRequest.testNames!!)
             }
         }
+    }
+
+    @GetMapping
+    @ApiOperation("Get list of run test session ids currently running")
+    @ApiResponses(
+            ApiResponse(code = 200, message = "Success"),
+            ApiResponse(code = 500, message = "Internal server error occurred")
+    )
+    fun getTestSessionIds(): Set<String> {
+        return testService.getTestSessionIds()
+    }
+
+    @DeleteMapping
+    @ApiResponses(
+            ApiResponse(code = 200, message = "Success"),
+            ApiResponse(code = 400, message = "Session with provided session id does not exist"),
+            ApiResponse(code = 500, message = "Internal server error occurred")
+    )
+    @ApiOperation("Stop test session by session id")
+    fun stopTestSession(sessionId: String) {
+        testService.stopTestSession(sessionId)
+    }
+
+    @ExceptionHandler
+    private fun handleWalletNotFoundException(request: HttpServletRequest, exception: IllegalArgumentException): ResponseEntity<String> {
+        return ResponseEntity("Bad request, ${exception.message}", HttpStatus.BAD_REQUEST)
     }
 }

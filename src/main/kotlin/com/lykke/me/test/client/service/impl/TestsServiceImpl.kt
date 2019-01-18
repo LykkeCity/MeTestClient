@@ -33,4 +33,12 @@ class TestsServiceImpl: TestsService {
     override fun getTestNames(): Set<String> {
         return testsFinder.getTestNames()
     }
+
+    override fun getTestSessionIds(): Set<String> {
+        return testsRunnerService.getAllTestSessionIds()
+    }
+
+    override fun stopTestSession(sessionId: String) {
+        testsRunnerService.stop(sessionId)
+    }
 }

@@ -6,4 +6,8 @@ interface TestsService {
     fun startTests(testNames: Set<String>, runTestsPolicy: RunTestsPolicy = RunTestsPolicy.CONTINUE_ON_ERROR)
 
     fun getTestNames(): Set<String>
+
+    fun getTestSessionIds(): Set<String>
+
+    fun stopTestSession(sessionId: String)
 }
