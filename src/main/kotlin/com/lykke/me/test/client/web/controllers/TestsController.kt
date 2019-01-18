@@ -1,5 +1,6 @@
 package com.lykke.me.test.client.web.controllers
 
+import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.service.TestsService
 import com.lykke.me.test.client.web.dto.RunTestsRequest
 import io.swagger.annotations.Api
@@ -35,20 +36,18 @@ class TestsController {
             ApiResponse(code = 200, message = "Success"),
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
-    fun test(@Valid
-             @RequestBody
-             runTestsRequest: RunTestsRequest) {
-        if (CollectionUtils.isEmpty(runTestsRequest.testNames)) {
-            if (runTestsRequest.runTestsPolicy != null) {
-                testService.startAllTests(runTestsRequest.runTestsPolicy)
+    fun test(testNames: HashSet<String>?,  runTestsPolicy: RunTestsPolicy?) {
+        if (CollectionUtils.isEmpty(testNames as Collection<String>)) {
+            if (runTestsPolicy != null) {
+                testService.startAllTests(runTestsPolicy)
             } else {
                 testService.startAllTests()
             }
         } else {
-            if (runTestsRequest.runTestsPolicy != null) {
-                testService.startTests(runTestsRequest.testNames!!, runTestsRequest.runTestsPolicy)
+            if (runTestsPolicy != null) {
+                testService.startTests(testNames, runTestsPolicy)
             } else {
-                testService.startTests(runTestsRequest.testNames!!)
+                testService.startTests(testNames)
             }
         }
     }
