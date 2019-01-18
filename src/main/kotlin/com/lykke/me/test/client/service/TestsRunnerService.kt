@@ -1,5 +1,6 @@
 package com.lykke.me.test.client.service
 
+import com.lykke.me.test.client.web.dto.TestSessionsDto
 import java.lang.reflect.Method
 
 interface TestsRunnerService {
@@ -10,5 +11,5 @@ interface TestsRunnerService {
 
     fun stop(sessionId: String)
 
-    fun getAllTestSessionIds(): Set<String>
+    fun getTestSessions(): List<TestSessionsDto>
 }

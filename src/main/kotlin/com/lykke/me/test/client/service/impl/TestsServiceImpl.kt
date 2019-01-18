@@ -4,6 +4,7 @@ import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.service.TestsFinderService
 import com.lykke.me.test.client.service.TestsRunnerService
 import com.lykke.me.test.client.service.TestsService
+import com.lykke.me.test.client.web.dto.TestSessionsDto
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -34,8 +35,8 @@ class TestsServiceImpl: TestsService {
         return testsFinder.getTestNames()
     }
 
-    override fun getTestSessionIds(): Set<String> {
-        return testsRunnerService.getAllTestSessionIds()
+    override fun getTestSessions(): List<TestSessionsDto> {
+        return testsRunnerService.getTestSessions()
     }
 
     override fun stopTestSession(sessionId: String) {

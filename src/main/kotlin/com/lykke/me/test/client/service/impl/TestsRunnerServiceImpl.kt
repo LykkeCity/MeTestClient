@@ -1,7 +1,10 @@
 package com.lykke.me.test.client.service.impl
 
+import com.lykke.me.test.client.entity.TestSessionEntity
 import com.lykke.me.test.client.service.TestsRunnerService
 import com.lykke.me.test.client.service.RunTestsPolicy
+import com.lykke.me.test.client.utils.Transformer
+import com.lykke.me.test.client.web.dto.TestSessionsDto
 import org.apache.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -37,6 +40,7 @@ class TestsRunnerServiceImpl : TestsRunnerService {
             })
 
     private val testFutureBySessionId = ConcurrentHashMap<String, Future<*>>()
+    private val testSessionInformationBySessionId = ConcurrentHashMap<String, TestSessionEntity>()
 
     @Autowired
     private lateinit var testRunnerThreadPool: ThreadPoolTaskExecutor
@@ -47,13 +51,16 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     override fun run(testMethods: List<Method>, runPolicy: RunTestsPolicy): String {
         val sessionId = UUID.randomUUID().toString()
         val testFuture = testRunnerThreadPool.submit {
+            val testMethodsName = testMethods.map { it.name }.toSet()
             testMethods.forEach {
                 if (Thread.interrupted()) {
-                    testFutureBySessionId.remove(sessionId)
+                    removeSession(sessionId)
                     logger.info("Session: $sessionId was stopped")
                     Thread.currentThread().interrupt()
                     return@forEach
                 }
+
+                updateProgress(sessionId, it.name, testMethodsName)
 
                 try {
                     invokeMethod(it, runPolicy)
@@ -62,7 +69,9 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                     return@forEach
                 }
             }
-            testFutureBySessionId.remove(sessionId)
+
+            logger.info("Session completed $sessionId")
+            removeSession(sessionId)
         }
 
         testFutureBySessionId[sessionId] = testFuture
@@ -77,8 +86,14 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         logger.info("Test session: $sessionId, was cancelled $cancelStatus")
     }
 
-    override fun getAllTestSessionIds(): Set<String> {
-        return testFutureBySessionId.keys
+    override fun getTestSessions(): List<TestSessionsDto> {
+        return testSessionInformationBySessionId.values
+                .map { Transformer.toTestSessionDto(it) }
+    }
+
+    private fun removeSession(sessionId: String) {
+        testFutureBySessionId.remove(sessionId)
+        testSessionInformationBySessionId.remove(sessionId)
     }
 
     private fun invokeMethod(method: Method, runPolicy: RunTestsPolicy) {
@@ -92,5 +107,21 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                 throw e.cause ?: e
             }
         }
+    }
+
+    private fun updateProgress(sessionId: String,
+                               currentlyRunning: String,
+                               allTestNames: Set<String>) {
+        val testSession = testSessionInformationBySessionId.getOrPut(sessionId) {
+            TestSessionEntity(sessionId,0.0, HashSet(), HashSet(allTestNames), null)
+        }
+
+        testSession.currentlyRunningTest?.let {
+            testSession.alreadyRunned.add(it)
+        }
+
+        testSession.progress = 100 * (testSession.alreadyRunned.size * 1.0 / allTestNames.size)
+        testSession.currentlyRunningTest = currentlyRunning
+        testSession.testsToBeRun.remove(currentlyRunning)
     }
 }

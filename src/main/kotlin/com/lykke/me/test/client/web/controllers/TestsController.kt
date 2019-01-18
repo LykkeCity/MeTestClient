@@ -2,6 +2,7 @@ package com.lykke.me.test.client.web.controllers
 
 import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.service.TestsService
+import com.lykke.me.test.client.web.dto.TestSessionsDto
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiResponse
@@ -50,13 +51,13 @@ class TestsController {
     }
 
     @GetMapping
-    @ApiOperation("Get list of run test session ids currently running")
+    @ApiOperation("Get information for currently running test session")
     @ApiResponses(
             ApiResponse(code = 200, message = "Success"),
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
-    fun getTestSessionIds(): Set<String> {
-        return testService.getTestSessionIds()
+    fun getTestSessionIds(): List<TestSessionsDto> {
+        return testService.getTestSessions()
     }
 
     @DeleteMapping
