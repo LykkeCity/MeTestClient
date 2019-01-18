@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.lang.IllegalArgumentException
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -23,6 +24,8 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     private val runTestStrategyByRunTestsPolicy = mapOf(RunTestsPolicy.CONTINUE_ON_ERROR to { test: () -> Unit ->
         try {
             test.invoke()
+        } catch (e: InterruptedException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Error running test", e)
         }
@@ -51,7 +54,13 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                     Thread.currentThread().interrupt()
                     return@forEach
                 }
-                invokeMethod(it, runPolicy)
+
+                try {
+                    invokeMethod(it, runPolicy)
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    return@forEach
+                }
             }
             testFutureBySessionId.remove(sessionId)
         }
@@ -75,6 +84,13 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     private fun invokeMethod(method: Method, runPolicy: RunTestsPolicy) {
         val factory = applicationContext.autowireCapableBeanFactory
         val testBean = factory.createBean(method.declaringClass)
-        runTestStrategyByRunTestsPolicy[runPolicy]?.invoke { method.invoke(testBean) }
+
+        runTestStrategyByRunTestsPolicy[runPolicy]?.invoke {
+            try {
+                method.invoke(testBean)
+            } catch (e: InvocationTargetException) {
+                throw e.cause ?: e
+            }
+        }
     }
 }
