@@ -1,5 +1,7 @@
 package com.lykke.me.test.client.outgoing.messages.common
 
+import java.lang.IllegalArgumentException
+
 enum class MessageType(val type: Byte) {
     RESPONSE(0),
     PING(1),
@@ -12,9 +14,20 @@ enum class MessageType(val type: Byte) {
     LIMIT_ORDER_CANCEL(55),
     MULTI_LIMIT_ORDER_CANCEL(57),
     NEW_RESPONSE(99),
-    MARKER_ORDER_RESPONSE(100),
+    MARKET_ORDER_RESPONSE(100),
     MULTI_LIMIT_ORDER_RESPONSE(98),
     RESERVED_CASH_IN_OUT_OPERATION(120),
     LIMIT_ORDER_MASS_CANCEL(121)
     ;
+
+    companion object {
+        private val valuesByType = MessageType.values()
+                .groupBy { it.type }
+                .mapValues { it.value.single() }
+
+        fun getByType(type: Byte): MessageType {
+            return valuesByType[type]
+                    ?: throw IllegalArgumentException("Unknown message type: $type")
+        }
+    }
 }
