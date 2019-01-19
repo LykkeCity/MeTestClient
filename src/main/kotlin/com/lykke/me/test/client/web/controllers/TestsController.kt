@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiResponse
 import io.swagger.annotations.ApiResponses
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.util.CollectionUtils
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -50,7 +51,7 @@ class TestsController {
         }
     }
 
-    @GetMapping
+    @GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
     @ApiOperation("Get information for currently running test session")
     @ApiResponses(
             ApiResponse(code = 200, message = "Success"),
