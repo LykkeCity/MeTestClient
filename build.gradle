@@ -29,6 +29,7 @@ sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
+	maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 ext {
@@ -45,6 +46,7 @@ dependencies {
 
 	compile "com.google.protobuf:protobuf-java:$protobuf_version"
 	compile 'log4j:log4j:1.2.17'
+	compile 'org.bitbucket.lykke:kotlin-utils:0.0.7-SNAPSHOT'
 }
 
 compileKotlin {
