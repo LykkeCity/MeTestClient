@@ -29,6 +29,7 @@ sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
+	maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 ext {
@@ -54,6 +55,8 @@ dependencies {
 
 	compile "org.reflections:reflections:$reflections_version"
 	compile "log4j:log4j:$log4j_version"
+
+    compile 'org.bitbucket.lykke:kotlin-utils:0.0.7-SNAPSHOT'
 }
 
 compileKotlin {
