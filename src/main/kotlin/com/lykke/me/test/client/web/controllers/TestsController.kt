@@ -35,8 +35,8 @@ class TestsController {
             ApiResponse(code = 200, message = "Success"),
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
-    fun test(testNames: HashSet<String>?, runTestsPolicy: RunTestsPolicy?) {
-        if (CollectionUtils.isEmpty(testNames as Collection<String>)) {
+    fun test(testNames: HashSet<String>?, runTestsPolicy: RunTestsPolicy?): String? {
+        return if (CollectionUtils.isEmpty(testNames as Collection<String>)) {
             if (runTestsPolicy != null) {
                 testService.startAllTests(runTestsPolicy)
             } else {
@@ -59,6 +59,16 @@ class TestsController {
     )
     fun getTestSessionIds(): List<TestSessionsDto> {
         return testService.getTestSessions()
+    }
+
+    @GetMapping( "available", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @ApiOperation("Get available test names")
+    @ApiResponses(
+            ApiResponse(code = 200, message = "Success"),
+            ApiResponse(code = 500, message = "Internal server error occurred")
+    )
+    fun getAvailableTests(): Set<String> {
+        return testService.getTestNames()
     }
 
     @DeleteMapping
