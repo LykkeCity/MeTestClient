@@ -9,6 +9,7 @@ import org.reflections.scanners.TypeAnnotationsScanner
 import org.springframework.stereotype.Component
 import org.springframework.util.CollectionUtils
 import java.lang.reflect.Method
+import java.lang.reflect.Modifier
 import javax.annotation.PostConstruct
 import kotlin.collections.ArrayList
 
@@ -54,7 +55,8 @@ class TestsFinderServiceImpl : TestsFinderService {
 
     private fun getTestMethodsFromTestClasses(testClasses: Set<Class<*>>): List<Method> {
         val result = ArrayList<Method>()
-        testClasses.forEach { result.addAll(it.declaredMethods) }
+        testClasses.forEach {
+            classes -> result.addAll(classes.declaredMethods.filter { method -> Modifier.isPublic(method.modifiers) }) }
         return result
     }
 }
