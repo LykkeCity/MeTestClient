@@ -28,3 +28,4 @@ gradle
 
 ProtocolMessages.java
 ProtocolEvents.java
+generalsettings.json
