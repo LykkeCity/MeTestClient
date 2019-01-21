@@ -54,7 +54,7 @@ class TestsFinderServiceImpl : TestsFinderService {
 
     private fun getTestMethodsFromTestClasses(testClasses: Set<Class<*>>): List<Method> {
         val result = ArrayList<Method>()
-        testClasses.forEach { result.addAll(it.methods) }
+        testClasses.forEach { result.addAll(it.declaredMethods) }
         return result
     }
 }
