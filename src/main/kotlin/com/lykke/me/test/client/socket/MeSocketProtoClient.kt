@@ -13,13 +13,13 @@ import java.io.DataOutputStream
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
 
-class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseListener,
+class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseListener,
                           private val host: String,
                           private val port: Int)
-    : MeClient, Thread(MeProtoSocketClient::class.java.name) {
+    : MeClient, Thread(MeSocketProtoClient::class.java.name) {
 
     companion object {
-        private val LOGGER = Logger.getLogger(MeProtoSocketClient::class.java.name)
+        private val LOGGER = Logger.getLogger(MeSocketProtoClient::class.java.name)
         private const val DELAY = 1000L
     }
 

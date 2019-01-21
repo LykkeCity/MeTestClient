@@ -27,3 +27,4 @@ gradle
 /.nb-gradle/
 
 ProtocolMessages.java
+ProtocolEvents.java
