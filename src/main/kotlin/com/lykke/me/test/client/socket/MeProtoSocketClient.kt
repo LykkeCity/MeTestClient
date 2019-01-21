@@ -30,10 +30,14 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
     private val messagesQueue = LinkedBlockingQueue<ProtoMessageWrapper>()
 
     override fun sendMessage(message: Message) {
-        messagesQueue.put(MessageProtoSerializerFactory
-                .getFactory(message.getType())
-                .createSerializer()
-                .serialize(message))
+        messagesQueue.put(toProtoMessageWrapper(message))
+    }
+
+    override fun sendMessages(messages: List<Message>) {
+        val serializedMessages = messages.map(::toProtoMessageWrapper)
+        for (message in serializedMessages) {
+            messagesQueue.put(message)
+        }
     }
 
     override fun run() {
@@ -60,6 +64,13 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
                 Thread.sleep(DELAY)
             }
         }
+    }
+
+    private fun toProtoMessageWrapper(message: Message): ProtoMessageWrapper {
+        return MessageProtoSerializerFactory
+                .getFactory(message.getType())
+                .createSerializer()
+                .serialize(message)
     }
 
     private fun waitConnecting() {
