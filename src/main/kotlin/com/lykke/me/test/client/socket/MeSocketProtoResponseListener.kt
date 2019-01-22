@@ -11,6 +11,7 @@ import java.io.DataInputStream
 class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
 
     class ResponseHandler(private val inputStream: DataInputStream,
+                          private val onStop: () -> Unit,
                           private val listener: MeSocketProtoResponseListener) : Thread(ResponseHandler::class.java.name) {
 
         companion object {
@@ -30,6 +31,7 @@ class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
                 } catch (e: Exception) {
                     LOGGER.error(null, e)
                     isRun = false
+                    onStop()
                 }
             }
         }
@@ -63,9 +65,10 @@ class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
     @Volatile
     private var responseHandler: ResponseHandler? = null
 
-    fun initResponseHandler(inputStream: DataInputStream) {
+    fun initResponseHandler(inputStream: DataInputStream,
+                            onStop: () -> Unit) {
         resetResponseHandler()
-        val newResponseHandler = ResponseHandler(inputStream, this)
+        val newResponseHandler = ResponseHandler(inputStream, onStop, this)
         newResponseHandler.start()
         this.responseHandler = newResponseHandler
     }

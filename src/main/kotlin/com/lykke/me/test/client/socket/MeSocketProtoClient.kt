@@ -10,6 +10,7 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.lang.IllegalStateException
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -42,9 +43,10 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
                 waitConnecting()
                 val message = messagesQueue.take()
                 try {
-                    if (connected) {
-                        sendMessage(message)
+                    if (!connected) {
+                        throw IllegalStateException()
                     }
+                    sendMessage(message)
                 } catch (e: Throwable) {
                     try {
                         closeConnection()
@@ -84,7 +86,9 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
 
         val type = inputStream!!.readByte()
         if (type == MessageType.PING.type) {
-            responseListener.initResponseHandler(inputStream!!)
+            responseListener.initResponseHandler(inputStream!!) {
+                connected = false
+            }
             connected = true
             LOGGER.info("Connected to Matching Engine")
         } else {
