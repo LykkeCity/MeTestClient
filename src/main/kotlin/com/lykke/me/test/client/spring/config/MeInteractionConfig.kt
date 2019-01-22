@@ -18,7 +18,9 @@ open class MeInteractionConfig {
                       config: Config): MeClient {
         return MeProtoSocketClient(meResponseListener as MeProtoSocketResponseListener,
                 config.matchingEngineTestClient.matchingEngineEndpoint.host,
-                config.matchingEngineTestClient.matchingEngineEndpoint.port)
+                config.matchingEngineTestClient.matchingEngineEndpoint.port,
+                500,
+                100)
     }
 
     @Bean

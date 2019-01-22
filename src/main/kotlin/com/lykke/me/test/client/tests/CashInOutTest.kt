@@ -36,8 +36,6 @@ class CashInOutTest {
         meClient.sendMessages(result)
     }
 
-
-
     private fun generateCashInMessages(count: Int,
                                        clientId: String,
                                        assetId: String,
