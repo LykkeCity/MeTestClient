@@ -117,10 +117,10 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         }
 
         testSession.currentlyRunningTest?.let {
-            testSession.alreadyRunned.add(it)
+            testSession.testsAlreadyRunned.add(it)
         }
 
-        testSession.progress = 100 * (testSession.alreadyRunned.size * 1.0 / allTestNames.size)
+        testSession.progress = 100 * (testSession.testsAlreadyRunned.size * 1.0 / allTestNames.size)
         testSession.currentlyRunningTest = currentlyRunning
         testSession.testsToBeRun.remove(currentlyRunning)
     }
