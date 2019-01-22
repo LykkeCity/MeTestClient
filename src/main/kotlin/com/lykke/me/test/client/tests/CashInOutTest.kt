@@ -11,6 +11,9 @@ import java.math.BigDecimal
 
 @MeTest
 class CashInOutTest {
+    private companion object {
+        val TEST_RUN_COUNT = 10_000
+    }
 
     @Autowired
     private lateinit var meClient: MeClient
@@ -19,22 +22,41 @@ class CashInOutTest {
     private lateinit var messageBuilder: MessageBuilder
 
     fun cashInTest() {
-        val result = ArrayList<Message>(20_000)
-        result.addAll(generateCashInMessages(10000, CLIENT1, "BTC", BigDecimal.valueOf(0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+        val result = ArrayList<Message>(TEST_RUN_COUNT * 2)
+        result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
                 FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC")))))
-        result.addAll(generateCashInMessages(10000, CLIENT2, "USD", BigDecimal.valueOf(0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+        result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT2, "USD", BigDecimal.valueOf(0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
                 FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("USD")))))
 
         meClient.sendMessages(result)
     }
 
     fun cashOutTest() {
-        val result = ArrayList<Message>(20_000)
-        result.addAll(generateCashInMessages(10000, CLIENT1, "BTC", BigDecimal.valueOf(-0.1)))
-        result.addAll(generateCashInMessages(10000, CLIENT2, "USD", BigDecimal.valueOf(-0.1)))
+        val result = ArrayList<Message>(TEST_RUN_COUNT * 2)
+        result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(-0.1)))
+        result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT2, "USD", BigDecimal.valueOf(-0.1)))
 
         meClient.sendMessages(result)
     }
+
+    fun cashInInputValidationFailed() {
+        val result = ArrayList<Message>(TEST_RUN_COUNT * 2)
+
+        result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "NotExist", BigDecimal.valueOf(0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("NotExist")))))
+
+        result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(0.000000001), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC")))))
+
+        meClient.sendMessages(result)
+    }
+
+
+    fun cashInBusinessValidationFailed() {
+        generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(-0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC"))))
+    }
+
 
     private fun generateCashInMessages(count: Int,
                                        clientId: String,
