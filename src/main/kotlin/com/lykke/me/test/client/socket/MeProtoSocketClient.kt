@@ -57,7 +57,9 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
             val currentIdx = sendNextBatch(serializedMessages, currentIndex, batchSize)
             currentIndex = currentIdx
             if (currentIndex != serializedMessages.size - 1) {
+                LOGGER.trace("Pause sending requests to ME")
                 sendMessagesLatch.await(currentIdx)
+                LOGGER.trace("Continue to send requests to ME")
             }
         }
     }

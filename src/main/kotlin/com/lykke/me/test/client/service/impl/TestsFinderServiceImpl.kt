@@ -55,8 +55,7 @@ class TestsFinderServiceImpl : TestsFinderService {
 
     private fun getTestMethodsFromTestClasses(testClasses: Set<Class<*>>): List<Method> {
         val result = ArrayList<Method>()
-        testClasses.forEach {
-            classes -> result.addAll(classes.declaredMethods.filter { method -> Modifier.isPublic(method.modifiers) }) }
+        testClasses.forEach { classes -> result.addAll(classes.declaredMethods.filter { method -> Modifier.isPublic(method.modifiers) && !method.name.contains("$") }) }
         return result
     }
 }
