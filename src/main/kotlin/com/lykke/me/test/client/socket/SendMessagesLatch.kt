@@ -5,16 +5,13 @@ import java.util.concurrent.locks.ReentrantLock
 class SendMessagesLatch(private val threshold: Int) {
     private val lock = ReentrantLock()
     private val condition = lock.newCondition()
-    private var responsesReceived = 0
+    private var responsesReceived = 0L
 
-    fun await(currentlySendItemsCount: Int) {
+    fun await(currentlySendItemsCount: Long) {
         try {
             lock.lock()
-            while (true) {
+            while (currentlySendItemsCount - responsesReceived >= threshold) {
                 condition.await()
-                if (currentlySendItemsCount - responsesReceived <= threshold) {
-                    return
-                }
             }
         } finally {
             lock.unlock()
@@ -25,11 +22,15 @@ class SendMessagesLatch(private val threshold: Int) {
         try {
             lock.lock()
             responsesReceived++
-            if (responsesReceived % 10 == 0) {
+            if (responsesReceived % 10 == 0L) {
                 condition.signal()
             }
         } finally {
             lock.unlock()
         }
+    }
+
+    fun getResponsesReceived(): Long {
+        return responsesReceived
     }
 }

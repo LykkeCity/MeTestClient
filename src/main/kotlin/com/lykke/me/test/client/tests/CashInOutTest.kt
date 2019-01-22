@@ -28,7 +28,7 @@ class CashInOutTest {
         result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT2, "USD", BigDecimal.valueOf(0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
                 FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("USD")))))
 
-        meClient.sendMessages(result)
+        result.forEach(meClient::sendMessage)
     }
 
     fun cashOutTest() {
@@ -36,18 +36,18 @@ class CashInOutTest {
         result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(-0.1)))
         result.addAll(generateCashInMessages(TEST_RUN_COUNT, CLIENT2, "USD", BigDecimal.valueOf(-0.1)))
 
-        meClient.sendMessages(result)
+        result.forEach(meClient::sendMessage)
     }
 
     fun cashInInputValidationFailed() {
-        meClient.sendMessages(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(0.000000001), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
-                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC")))))
+        generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(0.000000001), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC")))).forEach(meClient::sendMessage)
     }
 
 
     fun cashInBusinessValidationFailed() {
-        meClient.sendMessages(generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(-0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
-                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC")))))
+        generateCashInMessages(TEST_RUN_COUNT, CLIENT1, "BTC", BigDecimal.valueOf(-0.1), listOf(SimpleFeeInstruction(FeeType.PERCENTAGE,
+                FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.01), CLIENT1, CLIENT3, listOf("BTC")))).forEach(meClient::sendMessage)
     }
 
 

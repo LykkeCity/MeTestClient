@@ -19,7 +19,6 @@ open class MeInteractionConfig {
         return MeProtoSocketClient(meResponseListener as MeProtoSocketResponseListener,
                 config.matchingEngineTestClient.matchingEngineEndpoint.host,
                 config.matchingEngineTestClient.matchingEngineEndpoint.port,
-                500,
                 100)
     }
 

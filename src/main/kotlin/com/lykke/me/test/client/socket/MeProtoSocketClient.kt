@@ -13,14 +13,13 @@ import java.io.BufferedOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.net.Socket
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicLong
 
 class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseListener,
                           private val host: String,
                           private val port: Int,
-                          private val batchSize: Int,
-                          private val requestResponseCountThreshold: Int)
+                          requestResponseCountThreshold: Int)
     : MeClient, Thread(MeProtoSocketClient::class.java.name) {
 
     companion object {
@@ -33,35 +32,23 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
     private var inputStream: DataInputStream? = null
     private var connected = false
     private val messagesQueue = LinkedBlockingQueue<ProtoMessageWrapper>()
+    private var messagesSend =  AtomicLong(0)
+    private val sendMessagesLatch = SendMessagesLatch(requestResponseCountThreshold)
 
-    override fun sendMessage(message: Message) {
-        messagesQueue.put(toProtoMessageWrapper(message))
-    }
-
-    override fun sendMessages(messages: List<Message>) {
-        val serializedMessages = messages.map(::toProtoMessageWrapper)
-        var currentIndex = 0
-
-        val sendMessagesLatch = SendMessagesLatch(requestResponseCountThreshold)
-
-        val startLatch = CountDownLatch(1)
+    init {
         responseListener.subscribe(object : MeResponseSubscriber {
             override fun notify(response: Response) {
-                startLatch.await()
                 sendMessagesLatch.incrementResponseCount()
             }
         })
+    }
 
-        while (currentIndex < messages.size) {
-            startLatch.countDown()
-            val currentIdx = sendNextBatch(serializedMessages, currentIndex, batchSize)
-            currentIndex = currentIdx
-            if (currentIndex != serializedMessages.size - 1) {
-                LOGGER.trace("Pause sending requests to ME")
-                sendMessagesLatch.await(currentIdx)
-                LOGGER.trace("Continue to send requests to ME")
-            }
-        }
+    override fun sendMessage(message: Message) {
+        LOGGER.trace("Pause sending requests to ME: messages send: ${messagesSend.get()}, responses: ${sendMessagesLatch.getResponsesReceived()}")
+        sendMessagesLatch.await(messagesSend.get())
+        LOGGER.trace("Continue to send requests to ME: messages send: ${messagesSend.get()}, responses: ${sendMessagesLatch.getResponsesReceived()}")
+        messagesQueue.put(toProtoMessageWrapper(message))
+        messagesSend.incrementAndGet()
     }
 
     override fun run() {
@@ -88,16 +75,6 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
                 Thread.sleep(DELAY)
             }
         }
-    }
-
-    private fun sendNextBatch(messages: List<ProtoMessageWrapper>, startIdx: Int, batchSize: Int): Int {
-        var idx = startIdx
-        while (idx < messages.size && idx - startIdx < batchSize) {
-            messagesQueue.put(messages[idx])
-            idx++
-        }
-
-        return idx
     }
 
     private fun toProtoMessageWrapper(message: Message): ProtoMessageWrapper {
