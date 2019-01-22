@@ -17,4 +17,6 @@ class MarketOrderMessage(val clientId: String,
                          val date: Date) : Message {
 
     override fun getType() = MessageType.MARKET_ORDER
+
+    override fun getId() = messageId ?: externalId
 }
