@@ -44,7 +44,7 @@ class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
                 val response = ResponseProtoDeserializerFactory.getFactory(messageType)
                         .createDeserializer()
                         .deserialize(bytes)
-                LOGGER.info("Got Matching Engine response: $messageType")
+                LOGGER.debug("Got Matching Engine response: messageId=${response.messageId}, type=$messageType")
                 response
             } catch (e: Exception) {
                 LOGGER.error("Unable to handle Matching Engine response: ${e.message}")

@@ -26,4 +26,6 @@ class LimitOrderMessage(val clientId: String,
                         val date: Date) : Message {
 
     override fun getType() = MessageType.LIMIT_ORDER
+
+    override fun getId() = messageId ?: externalId
 }

@@ -1,3 +1,5 @@
 package com.lykke.me.test.client.incoming.events
 
-interface MeEvent
+interface MeEvent {
+    val messageId: String
+}

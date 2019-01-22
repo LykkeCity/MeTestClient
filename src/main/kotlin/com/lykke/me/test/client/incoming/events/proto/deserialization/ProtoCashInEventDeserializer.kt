@@ -6,6 +6,7 @@ import com.lykke.me.test.client.incoming.events.proto.ProtocolEvents
 
 class ProtoCashInEventDeserializer : MeProtoEventDeserializer<ProtocolEvents.CashInEvent> {
     override fun deserialize(byteArray: ByteArray): MeProtoEvent<ProtocolEvents.CashInEvent> {
-        return ProtoCashInEvent(ProtocolEvents.CashInEvent.parseFrom(byteArray))
+        val message = ProtocolEvents.CashInEvent.parseFrom(byteArray)
+        return ProtoCashInEvent(message, message.header.messageId)
     }
 }

@@ -27,7 +27,7 @@ class CashTransferMessageProtoSerializer : MessageProtoSerializer {
         message.fees.forEach {
             builder.addFees(ProtoUtils.createFeeBuilder(it))
         }
-        return ProtoMessageWrapper(builder.build(), message.getType())
+        return ProtoMessageWrapper(builder.build(), message)
     }
 
 }

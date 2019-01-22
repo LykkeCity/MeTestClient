@@ -110,10 +110,11 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
     }
 
     private fun sendMessage(message: ProtoMessageWrapper) {
-        outputStream!!.write(toByteArray(message.messageType.type,
+        outputStream!!.write(toByteArray(message.message.getType().type,
                 message.generatedMessage.serializedSize,
                 message.generatedMessage.toByteArray()))
         outputStream!!.flush()
+        LOGGER.debug("Sent message to ME: id=${message.message.getId()}, type=${message.message.getType()}")
     }
 
     private fun toByteArray(type: Byte, size: Int, data: ByteArray): ByteArray {
