@@ -19,15 +19,17 @@ apply plugin: 'kotlin-spring'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: "application"
 
 compileKotlin.dependsOn ':generateProto'
 
 group = ' com.lykke'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
+	maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 ext {
@@ -53,6 +55,7 @@ dependencies {
 
 	compile "org.reflections:reflections:$reflections_version"
 	compile "log4j:log4j:$log4j_version"
+    compile 'org.bitbucket.lykke:kotlin-utils:0.0.7-SNAPSHOT'
 }
 
 compileKotlin {
@@ -69,6 +72,13 @@ compileTestKotlin {
 	}
 }
 
+bootDistZip {
+	archiveName "${project.name}-${project.version}.zip"
+	into("${project.name}-${project.version}.zip") {
+		from "${rootProject.projectDir}/src/dist"
+	}
+}
+
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:$protobuf_version"
@@ -80,3 +90,6 @@ protobuf {
         ofSourceSet('main')
     }
 }
+
+mainClassName = "com.lykke.me.test.client.ApplicationKt"
+distTar.enabled = false

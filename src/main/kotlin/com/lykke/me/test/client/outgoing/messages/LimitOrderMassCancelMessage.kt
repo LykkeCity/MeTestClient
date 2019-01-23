@@ -9,4 +9,6 @@ class LimitOrderMassCancelMessage(val clientId: String,
                                   val messageId: String?) : Message {
 
     override fun getType() = MessageType.LIMIT_ORDER_MASS_CANCEL
+
+    override fun getId() = messageId ?: requestId
 }

@@ -12,4 +12,6 @@ class ReservedCashInOutMessage(val clientId: String,
                                val date: Date) : Message {
 
     override fun getType() = MessageType.RESERVED_CASH_IN_OUT_OPERATION
+
+    override fun getId() = messageId ?: requestId
 }
