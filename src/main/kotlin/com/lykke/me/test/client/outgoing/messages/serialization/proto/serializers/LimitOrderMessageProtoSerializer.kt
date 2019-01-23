@@ -49,6 +49,6 @@ class LimitOrderMessageProtoSerializer : MessageProtoSerializer {
         message.cancelAllPreviousLimitOrders?.let {
             builder.cancelAllPreviousLimitOrders = it
         }
-        return ProtoMessageWrapper(builder.build(), message.getType())
+        return ProtoMessageWrapper(builder.build(), message)
     }
 }

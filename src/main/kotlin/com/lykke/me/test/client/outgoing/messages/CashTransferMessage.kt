@@ -17,4 +17,6 @@ class CashTransferMessage(val fromClientId: String,
                           val date: Date) : Message {
 
     override fun getType() = MessageType.CASH_TRANSFER_OPERATION
+
+    override fun getId() = messageId ?: requestId
 }

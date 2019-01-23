@@ -7,4 +7,6 @@ class LimitOrderCancelMessage(val orderIds: Collection<String>,
                               val messageId: String?) : Message {
 
     override fun getType() = MessageType.LIMIT_ORDER_CANCEL
+
+    override fun getId() = messageId ?: requestId
 }

@@ -18,6 +18,8 @@ class MultiLimitOrderMessage(val clientId: String,
                              val date: Date): Message {
     override fun getType() = MessageType.MULTI_LIMIT_ORDER
 
+    override fun getId() = messageId ?: requestId
+
     class LimitOrder(val price: BigDecimal?,
                      val volume: BigDecimal,
                      val fee: FeeInstruction?,

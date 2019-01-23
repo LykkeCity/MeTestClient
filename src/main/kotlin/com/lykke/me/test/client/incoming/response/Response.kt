@@ -1,3 +1,5 @@
 package com.lykke.me.test.client.incoming.response
 
-interface Response
+interface Response {
+    val messageId: String
+}

@@ -17,6 +17,6 @@ class MultiLimitOrderCancelMessageSerializer : MessageProtoSerializer {
         message.messageId?.let {
             builder.messageId = it
         }
-        return ProtoMessageWrapper(builder.build(), message.getType())
+        return ProtoMessageWrapper(builder.build(), message)
     }
 }

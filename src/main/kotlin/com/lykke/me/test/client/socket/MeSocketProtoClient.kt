@@ -10,16 +10,17 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.lang.IllegalStateException
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
 
-class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseListener,
+class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseListener,
                           private val host: String,
                           private val port: Int)
-    : MeClient, Thread(MeProtoSocketClient::class.java.name) {
+    : MeClient, Thread(MeSocketProtoClient::class.java.name) {
 
     companion object {
-        private val LOGGER = Logger.getLogger(MeProtoSocketClient::class.java.name)
+        private val LOGGER = Logger.getLogger(MeSocketProtoClient::class.java.name)
         private const val DELAY = 1000L
     }
 
@@ -42,9 +43,10 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
                 waitConnecting()
                 val message = messagesQueue.take()
                 try {
-                    if (connected) {
-                        sendMessage(message)
+                    if (!connected) {
+                        throw IllegalStateException()
                     }
+                    sendMessage(message)
                 } catch (e: Throwable) {
                     try {
                         closeConnection()
@@ -84,7 +86,9 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
 
         val type = inputStream!!.readByte()
         if (type == MessageType.PING.type) {
-            responseListener.initResponseHandler(inputStream!!)
+            responseListener.initResponseHandler(inputStream!!) {
+                connected = false
+            }
             connected = true
             LOGGER.info("Connected to Matching Engine")
         } else {
@@ -106,10 +110,11 @@ class MeProtoSocketClient(private val responseListener: MeProtoSocketResponseLis
     }
 
     private fun sendMessage(message: ProtoMessageWrapper) {
-        outputStream!!.write(toByteArray(message.messageType.type,
+        outputStream!!.write(toByteArray(message.message.getType().type,
                 message.generatedMessage.serializedSize,
                 message.generatedMessage.toByteArray()))
         outputStream!!.flush()
+        LOGGER.debug("Sent message to ME: id=${message.message.getId()}, type=${message.message.getType()}")
     }
 
     private fun toByteArray(type: Byte, size: Int, data: ByteArray): ByteArray {

@@ -29,7 +29,8 @@ EXECSTR="$JAVACMD \
     -Dapp.pid="$$" \
     -Dapp.home="$BASEDIR" \
     -Dbasedir="$BASEDIR" \
-    -jar $BASEDIR/lib/me.test.client-0.0.1.jar"
+    -jar $BASEDIR/lib/me.test.client-0.0.1.jar \
+    $HTTP_CONFIG"
 
 
 if [[ " $@ " =~ " --console " ]] ; then
