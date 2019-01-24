@@ -61,7 +61,7 @@ class TestsFinderServiceImpl : TestsFinderService {
     private fun getTestMethodsFromTestClasses(testClasses: Set<Class<*>>): List<TestMethodEntity> {
         val result = ArrayList<TestMethodEntity>()
 
-        testClasses.forEach { clazz -> val methods = clazz.declaredMethods.filter { method -> Modifier.isPublic(method.modifiers) }
+        testClasses.forEach { clazz -> val methods = clazz.declaredMethods.filter { method -> Modifier.isPublic(method.modifiers) && !method.name.contains("$") }) }
             val runCount = clazz.getAnnotation(MeTest::class.java).repeat
             result.addAll(methods.map {TestMethodEntity(runCount, it)})
         }

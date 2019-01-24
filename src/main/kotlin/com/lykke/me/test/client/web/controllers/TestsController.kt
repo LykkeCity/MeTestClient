@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.lang.IllegalArgumentException
 import javax.servlet.http.HttpServletRequest
@@ -35,8 +36,9 @@ class TestsController {
             ApiResponse(code = 200, message = "Success"),
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
-    fun test(testNames: HashSet<String>?, runTestsPolicy: RunTestsPolicy?): String? {
-        return if (CollectionUtils.isEmpty(testNames as Collection<String>)) {
+    fun test(@RequestParam(required = false) testNames: HashSet<String>?,
+             @RequestParam(required = false) runTestsPolicy: RunTestsPolicy?): String? {
+        return if (CollectionUtils.isEmpty(testNames)) {
             if (runTestsPolicy != null) {
                 testService.startAllTests(runTestsPolicy)
             } else {
@@ -44,9 +46,9 @@ class TestsController {
             }
         } else {
             if (runTestsPolicy != null) {
-                testService.startTests(testNames, runTestsPolicy)
+                testService.startTests(testNames!!, runTestsPolicy)
             } else {
-                testService.startTests(testNames)
+                testService.startTests(testNames!!)
             }
         }
     }
