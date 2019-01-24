@@ -1,7 +1,7 @@
 package com.lykke.me.test.client.socket
 
 import com.lykke.me.test.client.MeClient
-import com.lykke.me.test.client.MeResponseSubscriber
+import com.lykke.me.test.client.MeSubscriber
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
@@ -37,8 +37,8 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
     private val sendMessagesLatch = SendMessagesLatch(requestResponseCountThreshold)
 
     init {
-        responseListener.subscribe(object : MeResponseSubscriber {
-            override fun notify(response: Response) {
+        responseListener.subscribe(object : MeSubscriber<Response> {
+            override fun notify(message: Response) {
                 sendMessagesLatch.incrementResponseCount()
             }
         })
