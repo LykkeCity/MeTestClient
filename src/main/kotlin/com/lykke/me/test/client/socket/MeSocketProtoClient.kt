@@ -1,6 +1,8 @@
 package com.lykke.me.test.client.socket
 
 import com.lykke.me.test.client.MeClient
+import com.lykke.me.test.client.MeSubscriber
+import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 import com.lykke.me.test.client.outgoing.messages.serialization.proto.factories.MessageProtoSerializerFactory
@@ -13,10 +15,12 @@ import java.io.DataOutputStream
 import java.lang.IllegalStateException
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicLong
 
 class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseListener,
                           private val host: String,
-                          private val port: Int)
+                          private val port: Int,
+                          requestResponseCountThreshold: Int)
     : MeClient, Thread(MeSocketProtoClient::class.java.name) {
 
     companion object {
@@ -29,12 +33,23 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
     private var inputStream: DataInputStream? = null
     private var connected = false
     private val messagesQueue = LinkedBlockingQueue<ProtoMessageWrapper>()
+    private var messagesSend =  AtomicLong(0)
+    private val sendMessagesLatch = SendMessagesLatch(requestResponseCountThreshold)
+
+    init {
+        responseListener.subscribe(object : MeSubscriber<Response> {
+            override fun notify(message: Response) {
+                sendMessagesLatch.incrementResponseCount()
+            }
+        })
+    }
 
     override fun sendMessage(message: Message) {
-        messagesQueue.put(MessageProtoSerializerFactory
-                .getFactory(message.getType())
-                .createSerializer()
-                .serialize(message))
+        LOGGER.trace("Pause sending requests to ME: messages send: ${messagesSend.get()}, responses: ${sendMessagesLatch.getResponsesReceived()}")
+        sendMessagesLatch.await(messagesSend.get())
+        LOGGER.trace("Continue to send requests to ME: messages send: ${messagesSend.get()}, responses: ${sendMessagesLatch.getResponsesReceived()}")
+        messagesQueue.put(toProtoMessageWrapper(message))
+        messagesSend.incrementAndGet()
     }
 
     override fun run() {
@@ -62,6 +77,13 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
                 Thread.sleep(DELAY)
             }
         }
+    }
+
+    private fun toProtoMessageWrapper(message: Message): ProtoMessageWrapper {
+        return MessageProtoSerializerFactory
+                .getFactory(message.getType())
+                .createSerializer()
+                .serialize(message)
     }
 
     private fun waitConnecting() {
