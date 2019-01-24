@@ -1,5 +1,6 @@
 package com.lykke.me.test.client.service.impl
 
+import com.lykke.me.test.client.entity.TestMethodEntity
 import com.lykke.me.test.client.entity.TestSessionEntity
 import com.lykke.me.test.client.service.TestsRunnerService
 import com.lykke.me.test.client.service.RunTestsPolicy
@@ -12,7 +13,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.lang.IllegalArgumentException
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
@@ -48,10 +48,10 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     @Autowired
     private lateinit var applicationContext: ApplicationContext
 
-    override fun run(testMethods: List<Method>, runPolicy: RunTestsPolicy): String {
+    override fun run(testMethods: List<TestMethodEntity>, runPolicy: RunTestsPolicy): String {
         val sessionId = UUID.randomUUID().toString()
         val testFuture = testRunnerThreadPool.submit {
-            val testMethodsName = testMethods.map { it.name }.toSet()
+            val testMethodsName = testMethods.map { it.method.name }.toSet()
             testMethods.forEach {
                 if (Thread.interrupted()) {
                     removeSession(sessionId)
@@ -60,7 +60,7 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                     return@forEach
                 }
 
-                updateProgress(sessionId, it.name, testMethodsName)
+                updateProgress(sessionId, it.method.name, testMethodsName)
 
                 try {
                     invokeMethod(it, runPolicy)
@@ -96,13 +96,13 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         testSessionInformationBySessionId.remove(sessionId)
     }
 
-    private fun invokeMethod(method: Method, runPolicy: RunTestsPolicy) {
+    private fun invokeMethod(method: TestMethodEntity, runPolicy: RunTestsPolicy) {
         val factory = applicationContext.autowireCapableBeanFactory
-        val testBean = factory.createBean(method.declaringClass)
+        val testBean = factory.createBean(method.method.declaringClass)
 
         runTestStrategyByRunTestsPolicy[runPolicy]?.invoke {
             try {
-                method.invoke(testBean)
+                IntRange(1, method.runCount).forEach { method.method.invoke(testBean) }
             } catch (e: InvocationTargetException) {
                 throw e.cause ?: e
             }
@@ -113,7 +113,7 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                                currentlyRunning: String,
                                allTestNames: Set<String>) {
         val testSession = testSessionInformationBySessionId.getOrPut(sessionId) {
-            TestSessionEntity(sessionId,0.0, HashSet(), HashSet(allTestNames), null)
+            TestSessionEntity(sessionId, 0.0, HashSet(), HashSet(allTestNames), null)
         }
 
         testSession.currentlyRunningTest?.let {
