@@ -3,6 +3,7 @@ package com.lykke.me.test.client.tests
 import com.google.common.util.concurrent.AtomicDouble
 import com.lykke.me.test.client.MeClient
 import com.lykke.me.test.client.config.Config
+import com.lykke.me.test.client.config.TestPrerequisitesConfig
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilder
 import com.lykke.me.test.client.utils.generateMessages
@@ -12,11 +13,6 @@ import javax.annotation.PostConstruct
 
 @MeTest(3)
 class LimitOrderTest {
-    private companion object {
-        val MESSAGES_COUNT = 10_000
-        val ASSET_PAIR_ID = "BTCUSD"
-    }
-
     @Autowired
     private lateinit var meClient: MeClient
 
@@ -28,66 +24,79 @@ class LimitOrderTest {
 
     private lateinit var CLIENT1: String
     private lateinit var CLIENT2: String
+    private lateinit var ASSET_PAIR: TestPrerequisitesConfig.AssetPairConfig
+    private var MAX_ORDERS_IN_ORDER_BOOK: Int? = null
 
     @PostConstruct
     fun init() {
         CLIENT1 = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()[0]
         CLIENT2 = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()[1]
+        ASSET_PAIR = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[1]
+        MAX_ORDERS_IN_ORDER_BOOK = config.matchingEngineTestClient.testPrerequisitesConfig.maxOrdersInOrderBook
     }
 
     fun testOrderNotMatch() {
-        cancelAllClientOrders(CLIENT1, ASSET_PAIR_ID)
+        cancelAllClientOrders(assetPairId =  ASSET_PAIR.assetPairId)
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(-300_000)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(300_000)))
 
-        generateMessages(MESSAGES_COUNT, getStrategy(CLIENT1,
-                ASSET_PAIR_ID,
-                BigDecimal.valueOf(0.1),
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
+                ASSET_PAIR.assetPairId,
+                BigDecimal.valueOf(0.01),
                 BigDecimal.valueOf(5500)))
                 .forEach(meClient::sendMessage)
     }
 
     fun testOrderFullyMatchedOneLevel() {
-        cancelAllClientOrders(CLIENT1, ASSET_PAIR_ID)
-        cancelAllClientOrders(CLIENT2, ASSET_PAIR_ID)
+        cancelAllClientOrders(assetPairId =  ASSET_PAIR.assetPairId)
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(-300_000)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(-100)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(300_000)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(100)))
 
-        generateMessages(MESSAGES_COUNT / 2, getStrategy(CLIENT1,
-                ASSET_PAIR_ID,
-                BigDecimal.valueOf(-0.1),
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
+                ASSET_PAIR.assetPairId,
+                BigDecimal.valueOf(-0.01),
                 BigDecimal.valueOf(5500)))
                 .forEach(meClient::sendMessage)
 
-        generateMessages(MESSAGES_COUNT / 2, getStrategy(CLIENT2,
-                ASSET_PAIR_ID,
-                BigDecimal.valueOf(0.1),
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT2,
+                ASSET_PAIR.assetPairId,
+                BigDecimal.valueOf(0.01),
                 BigDecimal.valueOf(5500),
                 false))
                 .forEach(meClient::sendMessage)
 
-        generateMessages(MESSAGES_COUNT / 2, getStrategy(CLIENT1,
-                ASSET_PAIR_ID,
-                BigDecimal.valueOf(0.1),
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
+                ASSET_PAIR.assetPairId,
+                BigDecimal.valueOf(0.01),
                 BigDecimal.valueOf(5500)))
                 .forEach(meClient::sendMessage)
 
-        generateMessages(MESSAGES_COUNT / 2, getStrategy(CLIENT2,
-                ASSET_PAIR_ID,
-                BigDecimal.valueOf(-0.1),
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT2,
+                ASSET_PAIR.assetPairId,
+                BigDecimal.valueOf(-0.01),
                 BigDecimal.valueOf(5500),
                 false))
                 .forEach(meClient::sendMessage)
     }
 
     fun testOrderFullyMatchedSeveralLevels() {
-        cancelAllClientOrders(CLIENT1, ASSET_PAIR_ID)
-        cancelAllClientOrders(CLIENT2, ASSET_PAIR_ID)
+        cancelAllClientOrders(assetPairId =  ASSET_PAIR.assetPairId)
 
-        generateMessages(MESSAGES_COUNT, getStrategy(CLIENT1,
-                ASSET_PAIR_ID,
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(-300_000)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(-100)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(300_000)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(100)))
+
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
+                ASSET_PAIR.assetPairId,
                 BigDecimal.valueOf(-0.1),
                 BigDecimal.valueOf(5500)))
                 .forEach(meClient::sendMessage)
 
-        generateMessages(MESSAGES_COUNT / 5, getStrategy(CLIENT2,
-                ASSET_PAIR_ID,
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!! / 5, getStrategy(CLIENT2,
+                ASSET_PAIR.assetPairId,
                 BigDecimal.valueOf(0.5),
                 BigDecimal.valueOf(5500),
                 false,
@@ -96,17 +105,16 @@ class LimitOrderTest {
     }
 
     fun testOrderPartiallyMatched() {
-        cancelAllClientOrders(CLIENT1, ASSET_PAIR_ID)
-        cancelAllClientOrders(CLIENT2, ASSET_PAIR_ID)
+        cancelAllClientOrders( assetPairId =  ASSET_PAIR.assetPairId)
 
-        generateMessages(MESSAGES_COUNT, getStrategy(CLIENT1,
-                ASSET_PAIR_ID,
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
+                ASSET_PAIR.assetPairId,
                 BigDecimal.valueOf(-0.1),
                 BigDecimal.valueOf(5500)))
                 .forEach(meClient::sendMessage)
 
-        generateMessages(MESSAGES_COUNT / 5, getStrategy(CLIENT2,
-                ASSET_PAIR_ID,
+        generateMessages(MAX_ORDERS_IN_ORDER_BOOK!! / 5, getStrategy(CLIENT2,
+                ASSET_PAIR.assetPairId,
                 BigDecimal.valueOf(0.5),
                 BigDecimal.valueOf(5500),
                 false,
@@ -131,7 +139,7 @@ class LimitOrderTest {
         }
     }
 
-    private fun cancelAllClientOrders(clientId: String, assetPairId: String? = null) {
+    private fun cancelAllClientOrders(clientId: String? = null, assetPairId: String? = null) {
         meClient.sendMessage(messageBuilder.buildLimitOrderMassCancelMessage(clientId, assetPairId))
     }
 }

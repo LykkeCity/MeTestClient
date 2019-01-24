@@ -2,7 +2,7 @@ package com.lykke.me.test.client.outgoing.messages
 
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 
-class LimitOrderMassCancelMessage(val clientId: String,
+class LimitOrderMassCancelMessage(val clientId: String?,
                                   val assetPairId: String?,
                                   val isBuy: Boolean?,
                                   val requestId: String,
