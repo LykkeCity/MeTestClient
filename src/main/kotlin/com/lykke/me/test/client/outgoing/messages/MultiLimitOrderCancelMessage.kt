@@ -11,4 +11,6 @@ class MultiLimitOrderCancelMessage(val clientId: String,
                                    val date: Date) : Message {
 
     override fun getType() = MessageType.MULTI_LIMIT_ORDER_CANCEL
+
+    override fun getId() = messageId ?: requestId
 }

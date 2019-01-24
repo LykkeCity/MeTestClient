@@ -50,6 +50,6 @@ class MultiLimitOrderMessageProtoSerializer : MessageProtoSerializer {
             limitOrder.expiryTime?.let { orderBuilder.expiryTime = it.time }
             builder.addOrders(orderBuilder.build())
         }
-        return ProtoMessageWrapper(builder.build(), message.getType())
+        return ProtoMessageWrapper(builder.build(), message)
     }
 }

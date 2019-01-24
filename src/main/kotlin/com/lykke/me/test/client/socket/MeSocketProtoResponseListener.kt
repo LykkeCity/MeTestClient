@@ -1,19 +1,18 @@
 package com.lykke.me.test.client.socket
 
-import com.lykke.me.test.client.MeResponseListener
-import com.lykke.me.test.client.MeResponseSubscriber
+import com.lykke.me.test.client.AbstractMeListener
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.incoming.response.deserialization.proto.factories.ResponseProtoDeserializerFactory
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 import com.lykke.me.test.utils.IntUtils
 import org.apache.log4j.Logger
 import java.io.DataInputStream
-import java.util.concurrent.CopyOnWriteArraySet
 
-class MeProtoSocketResponseListener : MeResponseListener {
+class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
 
     class ResponseHandler(private val inputStream: DataInputStream,
-                          private val listener: MeProtoSocketResponseListener) : Thread(ResponseHandler::class.java.name) {
+                          private val onStop: () -> Unit,
+                          private val listener: MeSocketProtoResponseListener) : Thread(ResponseHandler::class.java.name) {
 
         companion object {
             private val LOGGER = Logger.getLogger(ResponseHandler::class.java.name)
@@ -32,6 +31,7 @@ class MeProtoSocketResponseListener : MeResponseListener {
                 } catch (e: Exception) {
                     LOGGER.error(null, e)
                     isRun = false
+                    onStop()
                 }
             }
         }
@@ -44,7 +44,7 @@ class MeProtoSocketResponseListener : MeResponseListener {
                 val response = ResponseProtoDeserializerFactory.getFactory(messageType)
                         .createDeserializer()
                         .deserialize(bytes)
-                LOGGER.info("Got Matching Engine response: $messageType")
+                LOGGER.debug("Got Matching Engine response: messageId=${response.messageId}, type=$messageType")
                 response
             } catch (e: Exception) {
                 LOGGER.error("Unable to handle Matching Engine response: ${e.message}")
@@ -62,28 +62,13 @@ class MeProtoSocketResponseListener : MeResponseListener {
         }
     }
 
-    private val subscribers = CopyOnWriteArraySet<MeResponseSubscriber>()
-
     @Volatile
     private var responseHandler: ResponseHandler? = null
 
-    override fun subscribe(subscriber: MeResponseSubscriber) {
-        subscribers.add(subscriber)
-    }
-
-    override fun unsubscribe(subscriber: MeResponseSubscriber) {
-        subscribers.remove(subscriber)
-    }
-
-    private fun notifySubscribers(response: Response) {
-        subscribers.forEach {
-            it.notify(response)
-        }
-    }
-
-    fun initResponseHandler(inputStream: DataInputStream) {
+    fun initResponseHandler(inputStream: DataInputStream,
+                            onStop: () -> Unit) {
         resetResponseHandler()
-        val newResponseHandler = ResponseHandler(inputStream, this)
+        val newResponseHandler = ResponseHandler(inputStream, onStop, this)
         newResponseHandler.start()
         this.responseHandler = newResponseHandler
     }

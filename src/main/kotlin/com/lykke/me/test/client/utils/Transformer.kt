@@ -12,7 +12,7 @@ class Transformer {
                 TestSessionsDto(
                         it.sessionId,
                         BigDecimal.valueOf(it.progress).setScale(2, ROUND_HALF_UP).toDouble(),
-                        it.alreadyRunned,
+                        it.testsAlreadyRunned,
                         it.testsToBeRun,
                         it.currentlyRunningTest!!)
             }
