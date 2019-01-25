@@ -1,5 +1,6 @@
 package com.lykke.me.test.client.web.controllers
 
+import com.lykke.me.test.client.service.MessageRatePolicy
 import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.service.TestsService
 import com.lykke.me.test.client.web.dto.TestSessionsDto
@@ -37,19 +38,12 @@ class TestsController {
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
     fun test(@RequestParam(required = false) testNames: HashSet<String>?,
-             @RequestParam(required = false) runTestsPolicy: RunTestsPolicy?): String? {
+             @RequestParam(required = false) runTestsPolicy: RunTestsPolicy?,
+             @RequestParam(required = false) messageRatePolicy: MessageRatePolicy): String? {
         return if (CollectionUtils.isEmpty(testNames)) {
-            if (runTestsPolicy != null) {
-                testService.startAllTests(runTestsPolicy)
-            } else {
-                testService.startAllTests()
-            }
+            testService.startAllTests(runTestsPolicy, messageRatePolicy)
         } else {
-            if (runTestsPolicy != null) {
-                testService.startTests(testNames!!, runTestsPolicy)
-            } else {
-                testService.startTests(testNames!!)
-            }
+            testService.startTests(testNames!!, runTestsPolicy, messageRatePolicy)
         }
     }
 
@@ -63,7 +57,7 @@ class TestsController {
         return testService.getTestSessions()
     }
 
-    @GetMapping( "available", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("available", produces = [MediaType.APPLICATION_JSON_VALUE])
     @ApiOperation("Get available test names")
     @ApiResponses(
             ApiResponse(code = 200, message = "Success"),

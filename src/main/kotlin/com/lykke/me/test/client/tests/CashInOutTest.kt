@@ -16,7 +16,6 @@ class CashInOutTest {
         val TEST_RUN_COUNT = 10_000
     }
 
-    @Autowired
     private lateinit var meClient: MeClient
 
     @Autowired

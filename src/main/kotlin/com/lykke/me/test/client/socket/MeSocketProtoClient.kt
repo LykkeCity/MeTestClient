@@ -15,12 +15,10 @@ import java.io.DataOutputStream
 import java.lang.IllegalStateException
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.atomic.AtomicLong
 
 class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseListener,
                           private val host: String,
-                          private val port: Int,
-                          requestResponseCountThreshold: Int)
+                          private val port: Int)
     : MeClient, Thread(MeSocketProtoClient::class.java.name) {
 
     companion object {
@@ -33,23 +31,9 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
     private var inputStream: DataInputStream? = null
     private var connected = false
     private val messagesQueue = LinkedBlockingQueue<ProtoMessageWrapper>()
-    private var messagesSend =  AtomicLong(0)
-    private val sendMessagesLatch = SendMessagesLatch(requestResponseCountThreshold)
-
-    init {
-        responseListener.subscribe(object : MeSubscriber<Response> {
-            override fun notify(message: Response) {
-                sendMessagesLatch.incrementResponseCount()
-            }
-        })
-    }
 
     override fun sendMessage(message: Message) {
-        LOGGER.trace("Pause sending requests to ME: messages send: ${messagesSend.get()}, responses: ${sendMessagesLatch.getResponsesReceived()}")
-        sendMessagesLatch.await(messagesSend.get())
-        LOGGER.trace("Continue to send requests to ME: messages send: ${messagesSend.get()}, responses: ${sendMessagesLatch.getResponsesReceived()}")
         messagesQueue.put(toProtoMessageWrapper(message))
-        messagesSend.incrementAndGet()
     }
 
     override fun run() {
