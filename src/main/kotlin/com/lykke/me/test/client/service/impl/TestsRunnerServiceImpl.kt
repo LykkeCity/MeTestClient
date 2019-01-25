@@ -60,7 +60,9 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                     return@forEach
                 }
 
-                updateProgress(sessionId, it.method.name, testMethodsName)
+                updateProgress(sessionId,
+                        testMethods,
+                        it.method.name)
 
                 try {
                     invokeMethod(it, runPolicy)
@@ -110,18 +112,24 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     }
 
     private fun updateProgress(sessionId: String,
-                               currentlyRunning: String,
-                               allTestNames: Set<String>) {
+                               testMethods: List<TestMethodEntity>,
+                               currentlyRunning: String) {
         val testSession = testSessionInformationBySessionId.getOrPut(sessionId) {
-            TestSessionEntity(sessionId, 0.0, HashSet(), HashSet(allTestNames), null)
+            TestSessionEntity(sessionId, 0.0, HashSet(), HashSet(testMethods.map { it.method.name }), null)
         }
 
         testSession.currentlyRunningTest?.let {
             testSession.testsAlreadyRunned.add(it)
         }
 
-        testSession.progress = 100 * (testSession.testsAlreadyRunned.size * 1.0 / allTestNames.size)
+        testSession.progress = getProgress(testSession.testsAlreadyRunned, testMethods)
         testSession.currentlyRunningTest = currentlyRunning
         testSession.testsToBeRun.remove(currentlyRunning)
+    }
+
+    private fun getProgress(testsAlreadyRunned: Set<String>, testMethods: List<TestMethodEntity>): Double {
+        val testsAlreadyRunnedCount = testMethods.filter { testsAlreadyRunned.contains(it.method.name) }.map { it.runCount }.sum()
+        val allTestsCount = testMethods.map { it.runCount }.sum()
+        return 100 * testsAlreadyRunnedCount * 1.0 / allTestsCount
     }
 }
