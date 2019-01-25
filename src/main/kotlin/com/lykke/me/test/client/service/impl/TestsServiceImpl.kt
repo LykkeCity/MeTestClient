@@ -18,19 +18,30 @@ class TestsServiceImpl : TestsService {
     @Autowired
     private lateinit var testsRunnerService: TestsRunnerService
 
-    override fun startAllTests(runTestsPolicy: RunTestsPolicy?, messageRatePolicy: MessageRatePolicy?): String? {
+    override fun startAllTests(runTestsPolicy: RunTestsPolicy?,
+                               messageRatePolicy: MessageRatePolicy?,
+                               messageDelayMs: Long?): String? {
         val allTestMethods = testsFinder.getAllTestMethods()
         if (allTestMethods.isNotEmpty()) {
-            return testsRunnerService.run(allTestMethods, runTestsPolicy, messageRatePolicy)
+            return testsRunnerService.run(allTestMethods,
+                    runTestsPolicy,
+                    messageRatePolicy,
+                    messageDelayMs)
         }
 
         return null
     }
 
-    override fun startTests(testNames: Set<String>, runTestsPolicy: RunTestsPolicy?, messageRatePolicy: MessageRatePolicy?): String? {
+    override fun startTests(testNames: Set<String>,
+                            runTestsPolicy: RunTestsPolicy?,
+                            messageRatePolicy: MessageRatePolicy?,
+                            messageDelayMs: Long?): String? {
         val testMethods = testsFinder.getTestMethods(testNames)
         if (testMethods.isNotEmpty()) {
-            return testsRunnerService.run(testMethods, runTestsPolicy, messageRatePolicy)
+            return testsRunnerService.run(testMethods,
+                    runTestsPolicy,
+                    messageRatePolicy,
+                    messageDelayMs)
         }
 
         return null

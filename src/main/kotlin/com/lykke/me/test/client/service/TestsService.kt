@@ -3,9 +3,9 @@ package com.lykke.me.test.client.service
 import com.lykke.me.test.client.web.dto.TestSessionsDto
 
 interface TestsService {
-    fun startAllTests(runTestsPolicy: RunTestsPolicy?, messageRatePolicy: MessageRatePolicy?): String?
+    fun startAllTests(runTestsPolicy: RunTestsPolicy?, messageRatePolicy: MessageRatePolicy?, messageDelayMs: Long?): String?
 
-    fun startTests(testNames: Set<String>, runTestsPolicy: RunTestsPolicy?,  messageRatePolicy: MessageRatePolicy?): String?
+    fun startTests(testNames: Set<String>, runTestsPolicy: RunTestsPolicy?,  messageRatePolicy: MessageRatePolicy?, messageDelayMs: Long?): String?
 
     fun getTestNames(): Set<String>
 

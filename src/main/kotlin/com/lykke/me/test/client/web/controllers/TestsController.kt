@@ -38,12 +38,18 @@ class TestsController {
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
     fun test(@RequestParam(required = false) testNames: HashSet<String>?,
+             @RequestParam(required = false) messageDelayMs: Long?,
              @RequestParam(required = false) runTestsPolicy: RunTestsPolicy?,
              @RequestParam(required = false) messageRatePolicy: MessageRatePolicy): String? {
+        if (messageRatePolicy == MessageRatePolicy.MANUAL_MESSAGE_RATE &&
+                messageDelayMs == null) {
+            throw IllegalArgumentException("For manual message rate policy should be set 'messageDelayMs' parameter")
+        }
+
         return if (CollectionUtils.isEmpty(testNames)) {
-            testService.startAllTests(runTestsPolicy, messageRatePolicy)
+            testService.startAllTests(runTestsPolicy, messageRatePolicy, messageDelayMs)
         } else {
-            testService.startTests(testNames!!, runTestsPolicy, messageRatePolicy)
+            testService.startTests(testNames!!, runTestsPolicy, messageRatePolicy, messageDelayMs)
         }
     }
 

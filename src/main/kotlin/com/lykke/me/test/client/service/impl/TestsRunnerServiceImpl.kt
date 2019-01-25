@@ -55,9 +55,17 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     @Autowired
     private lateinit var meClientFactory: MeClientFactory
 
-    override fun run(testMethods: List<Method>, runTestsPolicy: RunTestsPolicy?, messageRatePolicy: MessageRatePolicy?): String {
+    override fun run(testMethods: List<Method>,
+                     runTestsPolicy: RunTestsPolicy?,
+                     messageRatePolicy: MessageRatePolicy?,
+                     messageDelayMs: Long?): String {
         val runPolicy = runTestsPolicy ?: RunTestsPolicy.CONTINUE_ON_ERROR
         val messageRate = messageRatePolicy ?: MessageRatePolicy.AUTO_MESSAGE_RATE
+
+        if (messageRatePolicy == MessageRatePolicy.MANUAL_MESSAGE_RATE && messageDelayMs == null) {
+            throw IllegalArgumentException("Manual message rate mode requires 'messageDelayMs' parameter")
+        }
+
         val sessionId = UUID.randomUUID().toString()
         val testFuture = testRunnerThreadPool.submit {
             val testMethodsName = testMethods.map { it.name }.toSet()
@@ -68,11 +76,10 @@ class TestsRunnerServiceImpl : TestsRunnerService {
                     Thread.currentThread().interrupt()
                     return@forEach
                 }
-
                 updateProgress(sessionId, it.name, testMethodsName)
 
                 try {
-                    invokeMethod(it, runPolicy, messageRate)
+                    invokeMethod(it, runPolicy, messageRate, messageDelayMs)
                 } catch (e: InterruptedException) {
                     Thread.currentThread().interrupt()
                     return@forEach
@@ -105,11 +112,14 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         testSessionInformationBySessionId.remove(sessionId)
     }
 
-    private fun invokeMethod(method: Method, runPolicy: RunTestsPolicy, messageRatePolicy: MessageRatePolicy) {
+    private fun invokeMethod(method: Method,
+                             runPolicy: RunTestsPolicy,
+                             messageRatePolicy: MessageRatePolicy,
+                             messageDelayMs: Long?) {
         val factory = applicationContext.autowireCapableBeanFactory
 
         val testBean = factory.createBean(method.declaringClass)
-        setClient(testBean, messageRatePolicy)
+        setClient(testBean, messageRatePolicy, messageDelayMs)
 
         runTestStrategyByRunTestsPolicy[runPolicy]?.invoke {
             try {
@@ -136,8 +146,8 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         testSession.testsToBeRun.remove(currentlyRunning)
     }
 
-    private fun setClient(bean: Any, messageRatePolicy: MessageRatePolicy)  {
-        val client = meClientFactory.getClient(messageRatePolicy)
+    private fun setClient(bean: Any, messageRatePolicy: MessageRatePolicy, messageDelayMs: Long?)  {
+        val client = meClientFactory.getClient(messageRatePolicy, messageDelayMs)
         val clientField = ReflectionUtils.findField(bean::class.java, ME_CLIENT_FIELD_NAME)
         clientField!!.isAccessible = true
         ReflectionUtils.setField(clientField, bean, client)
