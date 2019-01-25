@@ -6,6 +6,7 @@ import com.lykke.me.test.client.config.Config
 import com.lykke.me.test.client.config.TestPrerequisitesConfig
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilder
+import com.lykke.me.test.client.utils.calculateFundsNeeded
 import com.lykke.me.test.client.utils.generateMessages
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
@@ -28,7 +29,7 @@ class LimitOrderTest {
     private var MAX_ORDERS_IN_ORDER_BOOK: Int? = null
 
     @PostConstruct
-    fun init() {
+    private fun init() {
         CLIENT1 = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()[0]
         CLIENT2 = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()[1]
         ASSET_PAIR = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[1]
@@ -36,9 +37,10 @@ class LimitOrderTest {
     }
 
     fun testOrderNotMatch() {
-        cancelAllClientOrders(assetPairId =  ASSET_PAIR.assetPairId)
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(-300_000)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(300_000)))
+        cancelAllClientOrders(assetPairId = ASSET_PAIR.assetPairId)
+        val fundsNeededUSD = calculateFundsNeeded(BigDecimal.valueOf(MAX_ORDERS_IN_ORDER_BOOK!!.toLong()), BigDecimal.valueOf(5500 * 0.01), BigDecimal.valueOf(0.1 * 0.01)).plus(BigDecimal.valueOf(1000))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.quotingAssetId, fundsNeededUSD.negate()))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.quotingAssetId, fundsNeededUSD))
 
         generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
                 ASSET_PAIR.assetPairId,
@@ -48,11 +50,14 @@ class LimitOrderTest {
     }
 
     fun testOrderFullyMatchedOneLevel() {
-        cancelAllClientOrders(assetPairId =  ASSET_PAIR.assetPairId)
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(-300_000)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(-100)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(300_000)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(100)))
+        cancelAllClientOrders(assetPairId = ASSET_PAIR.assetPairId)
+        val fundsNeededUSD = calculateFundsNeeded(BigDecimal.valueOf(MAX_ORDERS_IN_ORDER_BOOK!!.toLong()), BigDecimal.valueOf(5500 * 0.01), BigDecimal.valueOf(0.1 * 0.01)).plus(BigDecimal.valueOf(1000))
+        val fundsNeededBTC = calculateFundsNeeded(BigDecimal.valueOf(MAX_ORDERS_IN_ORDER_BOOK!!.toLong()), BigDecimal.valueOf(0.01), BigDecimal.ZERO).plus(BigDecimal.valueOf(1000))
+
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, fundsNeededUSD.negate()))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, fundsNeededBTC.negate()))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, fundsNeededUSD))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, fundsNeededBTC))
 
         generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
                 ASSET_PAIR.assetPairId,
@@ -82,12 +87,14 @@ class LimitOrderTest {
     }
 
     fun testOrderFullyMatchedSeveralLevels() {
-        cancelAllClientOrders(assetPairId =  ASSET_PAIR.assetPairId)
+        cancelAllClientOrders(assetPairId = ASSET_PAIR.assetPairId)
+        val fundsNeededUSD = calculateFundsNeeded(BigDecimal.valueOf(MAX_ORDERS_IN_ORDER_BOOK!!.toLong()), BigDecimal.valueOf(5500 * 0.01), BigDecimal.valueOf(0.1 * 0.01)).plus(BigDecimal.valueOf(1000))
+        val fundsNeededBTC = calculateFundsNeeded(BigDecimal.valueOf(MAX_ORDERS_IN_ORDER_BOOK!!.toLong()), BigDecimal.valueOf(0.01), BigDecimal.ZERO).plus(BigDecimal.valueOf(1000))
 
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(-300_000)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(-100)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, BigDecimal.valueOf(300_000)))
-        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, BigDecimal.valueOf(100)))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, fundsNeededUSD.negate()))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, fundsNeededBTC.negate()))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT2, ASSET_PAIR.quotingAssetId, fundsNeededUSD))
+        meClient.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET_PAIR.baseAssetId, fundsNeededBTC))
 
         generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
                 ASSET_PAIR.assetPairId,
@@ -105,7 +112,7 @@ class LimitOrderTest {
     }
 
     fun testOrderPartiallyMatched() {
-        cancelAllClientOrders( assetPairId =  ASSET_PAIR.assetPairId)
+        cancelAllClientOrders(assetPairId = ASSET_PAIR.assetPairId)
 
         generateMessages(MAX_ORDERS_IN_ORDER_BOOK!!, getStrategy(CLIENT1,
                 ASSET_PAIR.assetPairId,
