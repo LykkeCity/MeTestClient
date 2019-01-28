@@ -1,6 +1,7 @@
 package com.lykke.me.test.client.tests
 
 import com.lykke.me.test.client.MeClient
+import com.lykke.me.test.client.config.Config
 import com.lykke.me.test.client.entity.Asset
 import com.lykke.me.test.client.entity.AssetPair
 import com.lykke.me.test.client.outgoing.messages.MultiLimitOrderMessage
@@ -11,32 +12,21 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 class MultiLimitOrderStressTest(private val meClient: MeClient,
-                                private val messageBuilder: MessageBuilder) {
+                                private val messageBuilder: MessageBuilder,
+                                config: Config) {
 
     companion object {
         private val LOGGER = Logger.getLogger(MultiLimitOrderStressTest::class.java.name)
     }
 
-    private val trustedClientId = "Client4"
-    private val clientId = "Client1"
-    private val initialOrderBookClientId = "Client5"
-    private val oppositeClientIds = setOf("Client2", "Client3", initialOrderBookClientId)
-    private val assetPair = AssetPair("TestMeAsset1_TestMeAsset2",
-            3,
-            Asset("TestMeAsset1", 2),
-            Asset("TestMeAsset2", 2))
+    private val multiOrderStressTestConfig = config.matchingEngineTestClient.multiOrderStressTest
+    private val testPrerequisitesConfig = config.matchingEngineTestClient.testPrerequisitesConfig
+    private val configClientIds = testPrerequisitesConfig.clientsConfig.clients.toList()
 
-    private val TEST_COUNT = 1
-    private val SIDE_ORDERS_COUNT = 200
-    private val DELAY = 3000L
-    private val startAskPrice = BigDecimal("11")
-    private val startBidPrice = BigDecimal("9")
-    private val priceStep = BigDecimal("0.01")
-    private val volume = BigDecimal("2")
-    private val ordersCountToMatch = 1
-    private val initialOrderBookSideSize = 10
-
-    private val assetIds = listOf(assetPair.baseAsset.id, assetPair.quotingAsset.id)
+    private val trustedClientId = testPrerequisitesConfig.clientsConfig.trustedClients.first()
+    private val clientId = configClientIds[0]
+    private val initialOrderBookClientId = configClientIds[1]
+    private val oppositeClientIds = setOf(configClientIds[2], configClientIds[3], initialOrderBookClientId)
     private val allClientIds = {
         val result = oppositeClientIds.toMutableList()
         result.add(trustedClientId)
@@ -44,41 +34,54 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
         result.toList()
     }()
 
+    private val assetPairConfig = testPrerequisitesConfig.assetsConfig.first()
+    private val assetPair = AssetPair(assetPairConfig.assetPairId,
+            assetPairConfig.assetPairAccuracy,
+            Asset(assetPairConfig.baseAssetId, assetPairConfig.baseAssetAccuracy),
+            Asset(assetPairConfig.quotingAssetId, assetPairConfig.quotingAssetAccuracy))
+    private val assetIds = listOf(assetPair.baseAsset.id, assetPair.quotingAsset.id)
     private val assetPairIds = listOf(assetPair.id)
 
+    private val testsCount = multiOrderStressTestConfig.testsCount
+    private val multiOrderSideSize = multiOrderStressTestConfig.multiOrderSideSize
+    private val startAskPrice = BigDecimal(multiOrderStressTestConfig.startAskPrice.toString())
+    private val startBidPrice = BigDecimal(multiOrderStressTestConfig.startBidPrice.toString())
+    private val priceStep = BigDecimal(multiOrderStressTestConfig.priceStep.toString())
+    private val volume = BigDecimal(multiOrderStressTestConfig.volume.toString())
+    private val ordersCountToMatch = multiOrderStressTestConfig.ordersCountToMatch
+    private val initialOrderBookSideSize = testPrerequisitesConfig.maxOrdersInOrderBook / 2
 
     @MeTest
-    fun testTrustedClientMultiLimitOrderWithoutTrades() {
+    fun trustedClientMultiLimitOrderWithoutTrades() {
         testMultiLimitOrderWithoutTrades(trustedClientId)
     }
 
     @MeTest
-    fun testTrustedClientMultiLimitOrderWithTrades() {
+    fun trustedClientMultiLimitOrderWithTrades() {
         testMultiLimitOrderWithTrades(trustedClientId)
     }
 
     @MeTest
-    fun testClientMultiLimitOrderWithoutTrades() {
+    fun clientMultiLimitOrderWithoutTrades() {
         testMultiLimitOrderWithoutTrades(clientId)
     }
 
     @MeTest
-    fun testClientMultiLimitOrderWithTrades() {
+    fun clientMultiLimitOrderWithTrades() {
         testMultiLimitOrderWithTrades(clientId)
     }
 
     private fun testMultiLimitOrderWithoutTrades(clientId: String) {
         init()
-        (1..TEST_COUNT).forEach {
-            meClient.sendMessage(buildMultiLimitOrderMessage(clientId, SIDE_ORDERS_COUNT))
-            LOGGER.debug("$it/$TEST_COUNT")
-            Thread.sleep(DELAY)
+        (1..testsCount).forEach {
+            meClient.sendMessage(buildMultiLimitOrderMessage(clientId, multiOrderSideSize))
+            LOGGER.debug("$it/$testsCount")
         }
     }
 
     private fun testMultiLimitOrderWithTrades(clientId: String) {
         init()
-        (1..TEST_COUNT).forEach {
+        (1..testsCount).forEach {
             val isBuySideTrades = it % 2 == 0
             setOppositeOrderBookForTrades(!isBuySideTrades, ordersCountToMatch)
 
@@ -94,11 +97,10 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
             }
 
             meClient.sendMessage(buildMultiLimitOrderMessage(clientId,
-                    SIDE_ORDERS_COUNT,
+                    multiOrderSideSize,
                     startAskPrice,
                     startBidPrice))
-            LOGGER.debug("$it/$TEST_COUNT")
-            Thread.sleep(DELAY)
+            LOGGER.debug("$it/$testsCount")
         }
     }
 
@@ -123,7 +125,6 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
         meClient.sendMessage(messageBuilder.buildMultiLimitOrderMessage(initialOrderBookClientId,
                 assetPair.id,
                 orders))
-        Thread.sleep(1000)
     }
 
     private fun buildMultiLimitOrderMessage(clientId: String,
