@@ -1,6 +1,7 @@
 package com.lykke.me.test.client.tests
 
 import com.lykke.me.test.client.MeClient
+import com.lykke.me.test.client.config.Config
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.common.FeeSizeType
 import com.lykke.me.test.client.outgoing.messages.common.FeeType
@@ -9,6 +10,7 @@ import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilder
 import com.lykke.me.test.client.utils.generateMessages
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
+import javax.annotation.PostConstruct
 
 @MeTest
 class CashTransferTest {
@@ -16,11 +18,28 @@ class CashTransferTest {
         val MESSAGE_COUNT = 10_000
     }
 
-    @Autowired
+    private lateinit var CLIENT1: String
+
+    private lateinit var CLIENT2: String
+
+    private lateinit var CLIENT3: String
+
     private lateinit var client: MeClient
 
     @Autowired
+    private lateinit var config: Config
+
+    @Autowired
     private lateinit var messageBuilder: MessageBuilder
+
+
+    @PostConstruct
+    private fun init() {
+        val availableClients = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()
+        CLIENT1 = availableClients[0]
+        CLIENT1 = availableClients[1]
+        CLIENT3 = availableClients[2]
+    }
 
     fun trasferFromClient1ToClient2() {
         client.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, "BTC", BigDecimal.valueOf(1000.0)))

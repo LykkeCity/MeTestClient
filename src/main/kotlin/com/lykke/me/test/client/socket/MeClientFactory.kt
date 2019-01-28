@@ -15,7 +15,7 @@ class MeClientFactory {
     private lateinit var meClient: MeClient
 
     @Autowired
-    private lateinit var meSocketProtoBlockingClient: MeBlockingClient
+    private lateinit var meBlockingClient: MeBlockingClient
 
     fun getClient(messageRatePolicy: MessageRatePolicy,
                   messageDelayMs: Long?): MeClient {
@@ -25,7 +25,7 @@ class MeClientFactory {
         }
 
         return when (messageRatePolicy) {
-            MessageRatePolicy.AUTO_MESSAGE_RATE -> meSocketProtoBlockingClient
+            MessageRatePolicy.AUTO_MESSAGE_RATE -> meBlockingClient
             MessageRatePolicy.MANUAL_MESSAGE_RATE -> object : MeClient {
                 override fun sendMessage(message: Message) {
                     Thread.sleep(messageDelayMs!!)

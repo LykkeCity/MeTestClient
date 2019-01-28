@@ -40,7 +40,7 @@ class TestsController {
     fun test(@RequestParam(required = false) testNames: HashSet<String>?,
              @RequestParam(required = false) messageDelayMs: Long?,
              @RequestParam(required = false) runTestsPolicy: RunTestsPolicy?,
-             @RequestParam(required = false) messageRatePolicy: MessageRatePolicy): String? {
+             @RequestParam(required = false) messageRatePolicy: MessageRatePolicy?): String? {
         if (messageRatePolicy == MessageRatePolicy.MANUAL_MESSAGE_RATE &&
                 messageDelayMs == null) {
             throw IllegalArgumentException("For manual message rate policy should be set 'messageDelayMs' parameter")
