@@ -1,6 +1,7 @@
 package com.lykke.me.test.client.tests
 
 import com.lykke.me.test.client.MeClient
+import com.lykke.me.test.client.config.Config
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.common.FeeSizeType
 import com.lykke.me.test.client.outgoing.messages.common.FeeType
@@ -9,6 +10,7 @@ import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilder
 import com.lykke.me.test.client.utils.generateMessages
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
+import javax.annotation.PostConstruct
 
 @MeTest
 class CashInOutTest {
@@ -17,10 +19,26 @@ class CashInOutTest {
     }
 
     @Autowired
-    private lateinit var meClient: MeClient
+    private lateinit var messageBuilder: MessageBuilder
 
     @Autowired
-    private lateinit var messageBuilder: MessageBuilder
+    private lateinit var config: Config
+
+    private lateinit var meClient: MeClient
+
+    private lateinit var CLIENT1: String
+
+    private lateinit var CLIENT2: String
+
+    private lateinit var CLIENT3: String
+
+    @PostConstruct
+    private fun init() {
+        val availableClients = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()
+        CLIENT1 = availableClients[0]
+        CLIENT1 = availableClients[1]
+        CLIENT1 = availableClients[2]
+    }
 
     fun cashInTest() {
         val result = ArrayList<Message>(TEST_RUN_COUNT * 2)

@@ -7,7 +7,10 @@ interface TestsRunnerService {
     /**
      * Runs test methods - return unique session id
      */
-    fun run(testMethods: List<Method>, runPolicy: RunTestsPolicy = RunTestsPolicy.CONTINUE_ON_ERROR): String
+    fun run(testMethods: List<Method>,
+            runTestsPolicy: RunTestsPolicy?,
+            messageRatePolicy: MessageRatePolicy?,
+            messageDelayMs: Long?): String
 
     fun stop(sessionId: String)
 
