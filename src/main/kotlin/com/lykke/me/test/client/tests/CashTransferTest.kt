@@ -47,7 +47,7 @@ class CashTransferTest {
     }
 
 
-    fun getStrategy(from: String, to: String, assetId: String, volume: BigDecimal): () -> Message {
+    private fun getStrategy(from: String, to: String, assetId: String, volume: BigDecimal): () -> Message {
         return {
             messageBuilder.buildCashTransferMessage(from, to, assetId,
                     fee = SimpleFeeInstruction(FeeType.PERCENTAGE, FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.1), CLIENT1, CLIENT3, listOf(assetId)),
