@@ -23,8 +23,7 @@ open class MeInteractionConfig {
                       config: Config): MeClient {
         return MeSocketProtoClient(meResponseListener as MeSocketProtoResponseListener,
                 config.matchingEngineTestClient.matchingEngineEndpoint.host,
-                config.matchingEngineTestClient.matchingEngineEndpoint.port,
-                100)
+                config.matchingEngineTestClient.matchingEngineEndpoint.port)
     }
 
     @Bean(initMethod = "start")
