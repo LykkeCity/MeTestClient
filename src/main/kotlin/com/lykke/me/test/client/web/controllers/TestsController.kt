@@ -1,5 +1,6 @@
 package com.lykke.me.test.client.web.controllers
 
+import com.lykke.me.test.client.service.MessageRatePolicy
 import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.service.TestsService
 import com.lykke.me.test.client.web.dto.TestSessionsDto
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.lang.IllegalArgumentException
 import javax.servlet.http.HttpServletRequest
@@ -35,19 +37,19 @@ class TestsController {
             ApiResponse(code = 200, message = "Success"),
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
-    fun test(testNames: HashSet<String>?, runTestsPolicy: RunTestsPolicy?): String? {
-        return if (CollectionUtils.isEmpty(testNames as Collection<String>)) {
-            if (runTestsPolicy != null) {
-                testService.startAllTests(runTestsPolicy)
-            } else {
-                testService.startAllTests()
-            }
+    fun test(@RequestParam(required = false) testNames: HashSet<String>?,
+             @RequestParam(required = false) messageDelayMs: Long?,
+             @RequestParam(required = false) runTestsPolicy: RunTestsPolicy?,
+             @RequestParam(required = false) messageRatePolicy: MessageRatePolicy?): String? {
+        if (messageRatePolicy == MessageRatePolicy.MANUAL_MESSAGE_RATE &&
+                messageDelayMs == null) {
+            throw IllegalArgumentException("For manual message rate policy should be set 'messageDelayMs' parameter")
+        }
+
+        return if (CollectionUtils.isEmpty(testNames)) {
+            testService.startAllTests(runTestsPolicy, messageRatePolicy, messageDelayMs)
         } else {
-            if (runTestsPolicy != null) {
-                testService.startTests(testNames, runTestsPolicy)
-            } else {
-                testService.startTests(testNames)
-            }
+            testService.startTests(testNames!!, runTestsPolicy, messageRatePolicy, messageDelayMs)
         }
     }
 
@@ -61,7 +63,7 @@ class TestsController {
         return testService.getTestSessions()
     }
 
-    @GetMapping( "available", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("available", produces = [MediaType.APPLICATION_JSON_VALUE])
     @ApiOperation("Get available test names")
     @ApiResponses(
             ApiResponse(code = 200, message = "Success"),
