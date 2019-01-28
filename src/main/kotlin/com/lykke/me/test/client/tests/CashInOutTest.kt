@@ -75,7 +75,7 @@ class CashInOutTest {
             clientId: String,
             assetId: String,
             volume: BigDecimal,
-            fees: List<SimpleFeeInstruction> = emptyList()): () -> Message {
+            fees: List<SimpleFeeInstruction> = emptyList()): (Int) -> Message {
         return { messageBuilder.buildCashInOutMessage(clientId, assetId, volume, fees) }
     }
 }

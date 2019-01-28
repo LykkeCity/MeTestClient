@@ -101,7 +101,7 @@ class MessageBuilderImpl : MessageBuilder {
                 messageId)
     }
 
-    override fun buildLimitOrderMassCancelMessage(clientId: String,
+    override fun buildLimitOrderMassCancelMessage(clientId: String?,
                                                   assetPairId: String?,
                                                   isBuy: Boolean?,
                                                   requestId: String,
