@@ -67,28 +67,12 @@ class TestsRunnerServiceImpl : TestsRunnerService {
 
         val sessionId = UUID.randomUUID().toString()
         val testFuture = testRunnerThreadPool.submit {
-            testMethods.forEach {
-                if (Thread.interrupted()) {
-                    removeSession(sessionId)
-                    logger.info("Session: $sessionId was stopped")
-                    Thread.currentThread().interrupt()
-                    return@forEach
-                }
-
-                updateProgress(sessionId,
-                        testMethods,
-                        it.method.name)
-
-                try {
-                    invokeMethod(it, runPolicy, messageRatePolicy, messageDelayMs)
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    return@forEach
-                }
+            try {
+                executeTest(testMethods, sessionId, runPolicy, messageRatePolicy, messageDelayMs)
+            } catch (e: Exception) {
+                logger.error("Fatal error while running test, please consider to report bug", e)
+                throw  e
             }
-
-            logger.info("Session completed $sessionId")
-            removeSession(sessionId)
         }
 
         testFutureBySessionId[sessionId] = testFuture
@@ -96,11 +80,39 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         return sessionId
     }
 
+    fun executeTest(testMethods: List<TestMethodEntity>, sessionId: String, runPolicy: RunTestsPolicy, messageRatePolicy: MessageRatePolicy, messageDelayMs: Long?) {
+        testMethods.forEach {
+            if (Thread.interrupted()) {
+                removeSession(sessionId)
+                logger.info("Session: $sessionId was stopped")
+                Thread.currentThread().interrupt()
+                return@forEach
+            }
+
+            updateProgress(sessionId,
+                    testMethods,
+                    it.method.name)
+
+            try {
+                invokeMethod(it, runPolicy, messageRatePolicy, messageDelayMs)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                return@forEach
+            }
+        }
+
+        logger.info("Session completed $sessionId")
+        removeSession(sessionId)
+    }
+
     override fun stop(sessionId: String) {
-        val testsFuture = testFutureBySessionId[sessionId]
+      val testFuture =   testFutureBySessionId[sessionId]
                 ?: throw IllegalArgumentException("Session with id: $sessionId does not exist")
-        val cancelStatus = testsFuture.cancel(true)
-        logger.info("Test session: $sessionId, was cancelled $cancelStatus")
+        stop(sessionId, testFuture)
+    }
+
+    override fun stopAll() {
+        testFutureBySessionId.forEach { entry -> stop(entry.key, entry.value)}
     }
 
     override fun getTestSessions(): List<TestSessionsDto> {
@@ -111,6 +123,11 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     private fun removeSession(sessionId: String) {
         testFutureBySessionId.remove(sessionId)
         testSessionInformationBySessionId.remove(sessionId)
+    }
+
+    private fun stop(sessionId: String, future: Future<*>) {
+        val cancelStatus = future.cancel(true)
+        logger.info("Test session: $sessionId, was cancelled $cancelStatus")
     }
 
     private fun invokeMethod(method: TestMethodEntity,

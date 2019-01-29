@@ -13,6 +13,7 @@ interface TestsRunnerService {
             messageDelayMs: Long?): String
 
     fun stop(sessionId: String)
+    fun stopAll()
 
     fun getTestSessions(): List<TestSessionsDto>
 }
