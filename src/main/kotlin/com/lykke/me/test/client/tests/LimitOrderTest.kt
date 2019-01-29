@@ -111,7 +111,7 @@ class LimitOrderTest {
                 ASSET_PAIR.assetPairId,
                 BigDecimal.valueOf(0.5),
                 LIMIT_ORDER_TEST_CONFIG.startBidPrice,
-                false,
+                true,
                 BigDecimal.valueOf(0.5)))
                 .forEach(meClient::sendMessage)
     }
@@ -138,7 +138,7 @@ class LimitOrderTest {
                 ASSET_PAIR.assetPairId,
                 BigDecimal.valueOf(0.5),
                 LIMIT_ORDER_TEST_CONFIG.startBidPrice,
-                false,
+                true,
                 BigDecimal.valueOf(0.4)))
                 .forEach(meClient::sendMessage)
     }
