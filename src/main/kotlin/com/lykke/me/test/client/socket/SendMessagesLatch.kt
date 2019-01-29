@@ -10,7 +10,7 @@ class SendMessagesLatch(private val threshold: Int) {
     fun await(currentlySendItemsCount: Long) {
         try {
             lock.lock()
-            while (currentlySendItemsCount - responsesReceived >= threshold) {
+            while (currentlySendItemsCount - responsesReceived > threshold) {
                 condition.await()
             }
         } finally {
