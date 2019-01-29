@@ -12,4 +12,6 @@ interface TestsService {
     fun getTestSessions(): List<TestSessionsDto>
 
     fun stopTestSession(sessionId: String)
+
+    fun stopAllTestSessions()
 }

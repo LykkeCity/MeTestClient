@@ -24,6 +24,7 @@ class CashTransferTest {
 
     private lateinit var CLIENT3: String
 
+    @Autowired
     private lateinit var client: MeClient
 
     @Autowired
@@ -37,7 +38,7 @@ class CashTransferTest {
     private fun init() {
         val availableClients = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()
         CLIENT1 = availableClients[0]
-        CLIENT1 = availableClients[1]
+        CLIENT2 = availableClients[1]
         CLIENT3 = availableClients[2]
     }
 
@@ -47,7 +48,7 @@ class CashTransferTest {
     }
 
 
-    private fun getStrategy(from: String, to: String, assetId: String, volume: BigDecimal): () -> Message {
+    private fun getStrategy(from: String, to: String, assetId: String, volume: BigDecimal): (Int) -> Message {
         return {
             messageBuilder.buildCashTransferMessage(from, to, assetId,
                     fee = SimpleFeeInstruction(FeeType.PERCENTAGE, FeeSizeType.CLIENT_FEE, BigDecimal.valueOf(0.1), CLIENT1, CLIENT3, listOf(assetId)),

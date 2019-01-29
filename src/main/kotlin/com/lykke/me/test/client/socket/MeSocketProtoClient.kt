@@ -94,7 +94,7 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
                 connected = false
             }
             connected = true
-            LOGGER.info("Connected to Matching Engine")
+            LOGGER.info("Connected to Matching Engine host: $host")
         } else {
             LOGGER.error("PING response is incorrect")
             Thread.sleep(DELAY)

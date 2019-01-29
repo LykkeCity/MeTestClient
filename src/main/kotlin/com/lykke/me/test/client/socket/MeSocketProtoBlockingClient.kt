@@ -2,6 +2,7 @@ package com.lykke.me.test.client.socket
 
 import com.lykke.me.test.client.MeBlockingClient
 import com.lykke.me.test.client.MeClient
+import com.lykke.me.test.client.MeListener
 import com.lykke.me.test.client.MeSubscriber
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.outgoing.messages.Message
@@ -20,13 +21,13 @@ class MeSocketProtoBlockingClient(requestResponseCountThreshold: Int): MeBlockin
     private lateinit var meClient: MeClient
 
     @Autowired
-    private lateinit var responseListener: MeSocketProtoResponseListener
+    private lateinit var meResponseListener: MeListener<Response>
 
     @Autowired
     private lateinit var meClientForSyncInteraction: MeClient
 
     @Autowired
-    private lateinit var meResponseListenerForSyncInteraction: MeSocketProtoResponseListener
+    private lateinit var meResponseListenerForSyncInteraction: MeListener<Response>
 
     private var messagesSend =  AtomicLong(0)
     private var messageSyncSend = AtomicLong(0)
@@ -36,7 +37,7 @@ class MeSocketProtoBlockingClient(requestResponseCountThreshold: Int): MeBlockin
 
     @PostConstruct
     fun init() {
-        responseListener.subscribe(object : MeSubscriber<Response> {
+        meResponseListener.subscribe(object : MeSubscriber<Response> {
             override fun notify(message: Response) {
                 sendMessagesLatch.incrementResponseCount()
             }
@@ -52,7 +53,7 @@ class MeSocketProtoBlockingClient(requestResponseCountThreshold: Int): MeBlockin
     override fun sendMessageSync(message: Message) {
         meClientForSyncInteraction.sendMessage(message)
         messageSyncSend.incrementAndGet()
-        sendMessagesLatchForSync.await(messagesSend.get())
+        sendMessagesLatchForSync.await(messageSyncSend.get())
     }
 
     override fun sendMessage(message: Message) {
