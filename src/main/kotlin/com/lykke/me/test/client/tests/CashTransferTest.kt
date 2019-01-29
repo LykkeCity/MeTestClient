@@ -38,7 +38,7 @@ class CashTransferTest {
     private fun init() {
         val availableClients = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()
         CLIENT1 = availableClients[0]
-        CLIENT1 = availableClients[1]
+        CLIENT2 = availableClients[1]
         CLIENT3 = availableClients[2]
     }
 
