@@ -60,7 +60,7 @@ interface MessageBuilder {
                                      requestId: String = UUID.randomUUID().toString(),
                                      messageId: String? = null): LimitOrderCancelMessage
 
-    fun buildLimitOrderMassCancelMessage(clientId: String,
+    fun buildLimitOrderMassCancelMessage(clientId: String? = null,
                                          assetPairId: String? = null,
                                          isBuy: Boolean? = null,
                                          requestId: String = UUID.randomUUID().toString(),

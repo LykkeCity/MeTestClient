@@ -12,6 +12,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 class MultiLimitOrderStressTest(private val meClient: MeClient,
+                                private val meClientForSyncInteraction: MeClient,
                                 private val messageBuilder: MessageBuilder,
                                 config: Config) {
 
@@ -107,10 +108,10 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
     private fun init() {
         allClientIds.forEach { clientId ->
             assetPairIds.forEach { assetPairId ->
-                meClient.sendMessage(messageBuilder.buildLimitOrderMassCancelMessage(clientId, assetPairId))
+                meClientForSyncInteraction.sendMessage(messageBuilder.buildLimitOrderMassCancelMessage(clientId, assetPairId))
             }
             assetIds.forEach { assetId ->
-                meClient.sendMessage(messageBuilder.buildCashInOutMessage(clientId, assetId, BigDecimal(1000000)))
+                meClientForSyncInteraction.sendMessage(messageBuilder.buildCashInOutMessage(clientId, assetId, BigDecimal(1000000)))
             }
         }
         val orders = ArrayList<MultiLimitOrderMessage.LimitOrder>(2 * initialOrderBookSideSize)
@@ -122,7 +123,7 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
                 volume,
                 BigDecimal.ZERO,
                 initialOrderBookSideSize))
-        meClient.sendMessage(messageBuilder.buildMultiLimitOrderMessage(initialOrderBookClientId,
+        meClientForSyncInteraction.sendMessage(messageBuilder.buildMultiLimitOrderMessage(initialOrderBookClientId,
                 assetPair.id,
                 orders))
     }

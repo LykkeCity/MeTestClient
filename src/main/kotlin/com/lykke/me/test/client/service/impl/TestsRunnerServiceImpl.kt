@@ -1,5 +1,6 @@
 package com.lykke.me.test.client.service.impl
 
+import com.lykke.me.test.client.entity.TestMethodEntity
 import com.lykke.me.test.client.entity.TestSessionEntity
 import com.lykke.me.test.client.service.MessageRatePolicy
 import com.lykke.me.test.client.service.TestsRunnerService
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Component
 import org.springframework.util.ReflectionUtils
 import java.lang.IllegalArgumentException
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
@@ -55,39 +55,24 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     @Autowired
     private lateinit var meClientFactory: MeClientFactory
 
-    override fun run(testMethods: List<Method>,
-                     runTestsPolicy: RunTestsPolicy?,
-                     messageRatePolicy: MessageRatePolicy?,
+    override fun run(testMethods: List<TestMethodEntity>,
+                     runTestPolicy: RunTestsPolicy?,
+                     testMessageRatePolicy: MessageRatePolicy?,
                      messageDelayMs: Long?): String {
-        val runPolicy = runTestsPolicy ?: RunTestsPolicy.CONTINUE_ON_ERROR
-        val messageRate = messageRatePolicy ?: MessageRatePolicy.AUTO_MESSAGE_RATE
-
+        val runPolicy = runTestPolicy ?: RunTestsPolicy.CONTINUE_ON_ERROR
+        val messageRatePolicy = testMessageRatePolicy ?: MessageRatePolicy.AUTO_MESSAGE_RATE
         if (messageRatePolicy == MessageRatePolicy.MANUAL_MESSAGE_RATE && messageDelayMs == null) {
             throw IllegalArgumentException("Manual message rate mode requires 'messageDelayMs' parameter")
         }
 
         val sessionId = UUID.randomUUID().toString()
         val testFuture = testRunnerThreadPool.submit {
-            val testMethodsName = testMethods.map { it.name }.toSet()
-            testMethods.forEach {
-                if (Thread.interrupted()) {
-                    removeSession(sessionId)
-                    logger.info("Session: $sessionId was stopped")
-                    Thread.currentThread().interrupt()
-                    return@forEach
-                }
-                updateProgress(sessionId, it.name, testMethodsName)
-
-                try {
-                    invokeMethod(it, runPolicy, messageRate, messageDelayMs)
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    return@forEach
-                }
+            try {
+                executeTest(testMethods, sessionId, runPolicy, messageRatePolicy, messageDelayMs)
+            } catch (e: Exception) {
+                logger.error("Fatal error while running test, please consider to report bug", e)
+                throw  e
             }
-
-            logger.info("Session completed $sessionId")
-            removeSession(sessionId)
         }
 
         testFutureBySessionId[sessionId] = testFuture
@@ -95,11 +80,39 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         return sessionId
     }
 
+    fun executeTest(testMethods: List<TestMethodEntity>, sessionId: String, runPolicy: RunTestsPolicy, messageRatePolicy: MessageRatePolicy, messageDelayMs: Long?) {
+        testMethods.forEach {
+            if (Thread.interrupted()) {
+                removeSession(sessionId)
+                logger.info("Session: $sessionId was stopped")
+                Thread.currentThread().interrupt()
+                return@forEach
+            }
+
+            updateProgress(sessionId,
+                    testMethods,
+                    it.method.name)
+
+            try {
+                invokeMethod(it, runPolicy, messageRatePolicy, messageDelayMs)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                return@forEach
+            }
+        }
+
+        logger.info("Session completed $sessionId")
+        removeSession(sessionId)
+    }
+
     override fun stop(sessionId: String) {
-        val testsFuture = testFutureBySessionId[sessionId]
+      val testFuture =   testFutureBySessionId[sessionId]
                 ?: throw IllegalArgumentException("Session with id: $sessionId does not exist")
-        val cancelStatus = testsFuture.cancel(true)
-        logger.info("Test session: $sessionId, was cancelled $cancelStatus")
+        stop(sessionId, testFuture)
+    }
+
+    override fun stopAll() {
+        testFutureBySessionId.forEach { entry -> stop(entry.key, entry.value)}
     }
 
     override fun getTestSessions(): List<TestSessionsDto> {
@@ -112,18 +125,22 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         testSessionInformationBySessionId.remove(sessionId)
     }
 
-    private fun invokeMethod(method: Method,
+    private fun stop(sessionId: String, future: Future<*>) {
+        val cancelStatus = future.cancel(true)
+        logger.info("Test session: $sessionId, was cancelled $cancelStatus")
+    }
+
+    private fun invokeMethod(method: TestMethodEntity,
                              runPolicy: RunTestsPolicy,
                              messageRatePolicy: MessageRatePolicy,
                              messageDelayMs: Long?) {
         val factory = applicationContext.autowireCapableBeanFactory
-
-        val testBean = factory.createBean(method.declaringClass)
-        setClient(testBean, messageRatePolicy, messageDelayMs)
+        val testBean = factory.createBean(method.method.declaringClass)
+        injectClient(testBean, messageRatePolicy, messageDelayMs)
 
         runTestStrategyByRunTestsPolicy[runPolicy]?.invoke {
             try {
-                method.invoke(testBean)
+                IntRange(1, method.runCount).forEach { method.method.invoke(testBean) }
             } catch (e: InvocationTargetException) {
                 throw e.cause ?: e
             }
@@ -131,22 +148,28 @@ class TestsRunnerServiceImpl : TestsRunnerService {
     }
 
     private fun updateProgress(sessionId: String,
-                               currentlyRunning: String,
-                               allTestNames: Set<String>) {
+                               testMethods: List<TestMethodEntity>,
+                               currentlyRunning: String) {
         val testSession = testSessionInformationBySessionId.getOrPut(sessionId) {
-            TestSessionEntity(sessionId, 0.0, HashSet(), HashSet(allTestNames), null)
+            TestSessionEntity(sessionId, 0.0, HashSet(), HashSet(testMethods.map { it.method.name }), null)
         }
 
         testSession.currentlyRunningTest?.let {
             testSession.testsAlreadyRunned.add(it)
         }
 
-        testSession.progress = 100 * (testSession.testsAlreadyRunned.size * 1.0 / allTestNames.size)
+        testSession.progress = getProgress(testSession.testsAlreadyRunned, testMethods)
         testSession.currentlyRunningTest = currentlyRunning
         testSession.testsToBeRun.remove(currentlyRunning)
     }
 
-    private fun setClient(bean: Any, messageRatePolicy: MessageRatePolicy, messageDelayMs: Long?)  {
+    private fun getProgress(testsAlreadyRunned: Set<String>, testMethods: List<TestMethodEntity>): Double {
+        val testsAlreadyRunnedCount = testMethods.filter { testsAlreadyRunned.contains(it.method.name) }.map { it.runCount }.sum()
+        val allTestsCount = testMethods.map { it.runCount }.sum()
+        return 100 * testsAlreadyRunnedCount * 1.0 / allTestsCount
+    }
+
+    private fun injectClient(bean: Any, messageRatePolicy: MessageRatePolicy, messageDelayMs: Long?) {
         val client = meClientFactory.getClient(messageRatePolicy, messageDelayMs)
         val clientField = ReflectionUtils.findField(bean::class.java, ME_CLIENT_FIELD_NAME)
         clientField!!.isAccessible = true

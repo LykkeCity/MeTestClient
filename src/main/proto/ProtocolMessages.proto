@@ -122,7 +122,7 @@ message MultiLimitOrderCancel {
 
 message LimitOrderMassCancel {
     required string uid = 1;
-    required string clientId = 2;
+    optional string clientId = 2;
     optional string assetPairId = 3;
     optional bool isBuy = 4;
     optional string messageId = 5;
