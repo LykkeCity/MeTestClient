@@ -22,9 +22,7 @@ class SendMessagesLatch(private val threshold: Int) {
         try {
             lock.lock()
             responsesReceived++
-            if (responsesReceived % 10 == 0L) {
-                condition.signal()
-            }
+            condition.signal()
         } finally {
             lock.unlock()
         }
