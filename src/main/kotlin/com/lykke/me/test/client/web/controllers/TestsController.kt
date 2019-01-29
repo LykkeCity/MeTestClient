@@ -84,6 +84,16 @@ class TestsController {
         testService.stopTestSession(sessionId)
     }
 
+    @DeleteMapping("all")
+    @ApiResponses(
+            ApiResponse(code = 200, message = "Success"),
+            ApiResponse(code = 500, message = "Internal server error occurred")
+    )
+    @ApiOperation("Stop all test sessions")
+    fun stopAllTestSessions(sessionId: String) {
+        testService.stopAllTestSessions()
+    }
+
     @ExceptionHandler
     private fun handleWalletNotFoundException(request: HttpServletRequest, exception: IllegalArgumentException): ResponseEntity<String> {
         return ResponseEntity("Bad request, ${exception.message}", HttpStatus.BAD_REQUEST)

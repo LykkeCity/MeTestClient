@@ -1,9 +1,9 @@
 package com.lykke.me.test.client.service
 
-import java.lang.reflect.Method
+import com.lykke.me.test.client.entity.TestMethodEntity
 
 interface TestsFinderService {
-    fun getTestMethods(names: Set<String>): List<Method>
-    fun getAllTestMethods(): List<Method>
+    fun getTestMethods(names: Set<String>): List<TestMethodEntity>
+    fun getAllTestMethods(): List<TestMethodEntity>
     fun getTestNames(): Set<String>
 }

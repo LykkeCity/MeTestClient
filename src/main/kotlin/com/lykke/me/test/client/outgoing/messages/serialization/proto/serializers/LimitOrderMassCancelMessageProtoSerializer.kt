@@ -9,7 +9,8 @@ class LimitOrderMassCancelMessageProtoSerializer : MessageProtoSerializer {
         message as LimitOrderMassCancelMessage
         val builder = ProtocolMessages.LimitOrderMassCancel.newBuilder()
                 .setUid(message.requestId)
-                .setClientId(message.clientId)
+
+        message.clientId?.let { builder.setClientId(message.clientId) }
         message.assetPairId?.let {
             builder.assetPairId = it
         }

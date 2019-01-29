@@ -1,8 +1,6 @@
 package com.lykke.me.test.client.socket
 
 import com.lykke.me.test.client.MeClient
-import com.lykke.me.test.client.MeSubscriber
-import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 import com.lykke.me.test.client.outgoing.messages.serialization.proto.factories.MessageProtoSerializerFactory
@@ -96,7 +94,7 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
                 connected = false
             }
             connected = true
-            LOGGER.info("Connected to Matching Engine")
+            LOGGER.info("Connected to Matching Engine host: $host")
         } else {
             LOGGER.error("PING response is incorrect")
             Thread.sleep(DELAY)

@@ -35,8 +35,7 @@ open class MeInteractionConfig {
     }
 
     @Bean
-    open fun meSocketProtoBlockingClient(meResponseListenerForSyncInteraction: MeListener<Response>,
-                                         config: Config): MeBlockingClient {
+    open fun meSocketProtoBlockingClient(): MeBlockingClient {
         return MeSocketProtoBlockingClient(100)
     }
 
@@ -45,13 +44,13 @@ open class MeInteractionConfig {
         return MeSocketProtoResponseListener()
     }
 
-    @Bean(initMethod = "start")
-    open fun meEventListener(config: Config): MeListener<MeEvent> {
-        return MeRabbitMqProtoEventListener(config.matchingEngineTestClient.rabbitMqConfigs) as MeListener<MeEvent>
+    @Bean
+    open fun meResponseListenerForSyncInteraction(): MeListener<Response> {
+        return MeSocketProtoResponseListener()
     }
 
     @Bean(initMethod = "start")
-    open fun meResponseListenerForSyncInteraction(config: Config): MeListener<MeEvent> {
+    open fun meEventListener(config: Config): MeListener<MeEvent> {
         return MeRabbitMqProtoEventListener(config.matchingEngineTestClient.rabbitMqConfigs) as MeListener<MeEvent>
     }
 

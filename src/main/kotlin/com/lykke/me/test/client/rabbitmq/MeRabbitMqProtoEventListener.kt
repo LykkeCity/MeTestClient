@@ -90,7 +90,7 @@ class MeRabbitMqProtoEventListener(private val configs: Set<RabbitMqConfig>)
     private fun processMessage(messageWrapper: RmqMessageWrapper) {
         val deserializer = deserializerByRoutingKey[messageWrapper.routingKey]
         if (deserializer == null) {
-            LOGGER.error("There is now deserializer for routingKey=${messageWrapper.routingKey}")
+            LOGGER.error("There is no deserializer for routingKey=${messageWrapper.routingKey}")
         }
         val event = deserializer!!.deserialize(messageWrapper.message)
         LOGGER.debug("Got event from rabbit mq: routingKey=${messageWrapper.routingKey}, class: ${event.message::class.java.name}, messageId=${event.messageId}")
