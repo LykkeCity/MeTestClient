@@ -8,8 +8,8 @@ interface TestsRunnerService {
      * Runs test methods - return unique session id
      */
     fun run(testMethods: List<TestMethodEntity>,
-            runPolicy: RunTestsPolicy = RunTestsPolicy.CONTINUE_ON_ERROR,
-            messageRatePolicy: MessageRatePolicy?,
+            runTestPolicy: RunTestsPolicy?,
+            testMessageRatePolicy: MessageRatePolicy?,
             messageDelayMs: Long?): String
 
     fun stop(sessionId: String)
