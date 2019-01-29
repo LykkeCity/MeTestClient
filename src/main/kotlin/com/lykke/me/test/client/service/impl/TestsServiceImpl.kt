@@ -58,4 +58,8 @@ class TestsServiceImpl : TestsService {
     override fun stopTestSession(sessionId: String) {
         testsRunnerService.stop(sessionId)
     }
+
+    override fun stopAllTestSessions() {
+        testsRunnerService.stopAll()
+    }
 }
