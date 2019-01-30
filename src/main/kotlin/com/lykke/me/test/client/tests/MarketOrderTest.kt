@@ -86,9 +86,10 @@ class MarketOrderTest {
                 MARKET_ORDER_TEST_CONFIG.startAskPrice))
                 .forEach(meClient::sendMessage)
 
-        generateMessages((MAX_ORDERS_IN_ORDER_BOOK!! * MARKET_ORDER_TEST_CONFIG.volume.toInt() / 0.054).toInt(), getMarketOrderStrategy(CLIENT2,
+        generateMessages((MAX_ORDERS_IN_ORDER_BOOK!! * MARKET_ORDER_TEST_CONFIG.volume.toDouble() / 0.054).toInt(), getMarketOrderStrategy(CLIENT2,
                 ASSET_PAIR1.id,
                 BigDecimal.valueOf(0.054)))
+                .forEach(meClient::sendMessage)
     }
 
     private fun prepareEnv() {
