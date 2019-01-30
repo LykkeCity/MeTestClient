@@ -80,7 +80,11 @@ class TestsRunnerServiceImpl : TestsRunnerService {
         return sessionId
     }
 
-    fun executeTest(testMethods: List<TestMethodEntity>, sessionId: String, runPolicy: RunTestsPolicy, messageRatePolicy: MessageRatePolicy, messageDelayMs: Long?) {
+    fun executeTest(testMethods: List<TestMethodEntity>,
+                    sessionId: String,
+                    runPolicy: RunTestsPolicy,
+                    messageRatePolicy: MessageRatePolicy,
+                    messageDelayMs: Long?) {
         testMethods.forEach {
             if (Thread.interrupted()) {
                 removeSession(sessionId)

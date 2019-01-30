@@ -2,6 +2,7 @@ package com.lykke.me.test.client.web.controllers
 
 import com.lykke.me.test.client.service.MessageRatePolicy
 import com.lykke.me.test.client.service.RunTestsPolicy
+import com.lykke.me.test.client.service.TestMetricService
 import com.lykke.me.test.client.service.TestsService
 import com.lykke.me.test.client.web.dto.TestSessionsDto
 import io.swagger.annotations.Api
@@ -30,6 +31,9 @@ class TestsController {
 
     @Autowired
     private lateinit var testService: TestsService
+
+    @Autowired
+    private lateinit var testMetricService: TestMetricService
 
     @PostMapping
     @ApiOperation("Start running tests on target ME instance")
@@ -73,6 +77,16 @@ class TestsController {
         return testService.getTestNames()
     }
 
+    @GetMapping("throughput")
+    @ApiResponses(
+            ApiResponse(code = 200, message = "Success"),
+            ApiResponse(code = 500, message = "Internal server error occurred")
+    )
+    @ApiOperation("Get current throughput")
+    fun getThroughput(): Long {
+        return testMetricService.getCurrentThroughput()
+    }
+
     @DeleteMapping
     @ApiResponses(
             ApiResponse(code = 200, message = "Success"),
@@ -90,7 +104,7 @@ class TestsController {
             ApiResponse(code = 500, message = "Internal server error occurred")
     )
     @ApiOperation("Stop all test sessions")
-    fun stopAllTestSessions(sessionId: String) {
+    fun stopAllTestSessions() {
         testService.stopAllTestSessions()
     }
 
