@@ -5,6 +5,8 @@ import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.service.TestsFinderService
 import com.lykke.me.test.client.service.TestsRunnerService
 import com.lykke.me.test.client.service.TestsService
+import com.lykke.me.test.client.web.dto.AvailableTestsDto
+import com.lykke.me.test.client.web.dto.TestGroup
 import com.lykke.me.test.client.web.dto.TestSessionsDto
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -32,11 +34,11 @@ class TestsServiceImpl : TestsService {
         return null
     }
 
-    override fun startTests(testNames: Set<String>,
-                            runTestsPolicy: RunTestsPolicy?,
-                            messageRatePolicy: MessageRatePolicy?,
-                            messageDelayMs: Long?): String? {
-        val testMethods = testsFinder.getTestMethods(testNames)
+    override fun startTestsByNames(testNames: Set<String>,
+                                   runTestsPolicy: RunTestsPolicy?,
+                                   messageRatePolicy: MessageRatePolicy?,
+                                   messageDelayMs: Long?): String? {
+        val testMethods = testsFinder.getTestMethodsByTestNames(testNames)
         if (testMethods.isNotEmpty()) {
             return testsRunnerService.run(testMethods,
                     runTestsPolicy,
@@ -47,8 +49,32 @@ class TestsServiceImpl : TestsService {
         return null
     }
 
-    override fun getTestNames(): Set<String> {
-        return testsFinder.getTestNames()
+    override fun startTestsByGroups(groupNames: Set<String>,
+                            runTestsPolicy: RunTestsPolicy?,
+                            messageRatePolicy: MessageRatePolicy?,
+                            messageDelayMs: Long?): String? {
+        val testMethods = testsFinder.getTestMethodsByGroupNames(groupNames)
+        if (testMethods.isNotEmpty()) {
+            return testsRunnerService.run(testMethods,
+                    runTestsPolicy,
+                    messageRatePolicy,
+                    messageDelayMs)
+        }
+
+        return null
+    }
+
+    override fun getAllTests(): AvailableTestsDto {
+       val testGroups = ArrayList<TestGroup>()
+        val methodNamesByGroup = testsFinder.getAllTestMethods()
+                .groupBy {it.testGroup}
+                .mapValues { it.value.map { it.method.name }.toSet() }
+
+        methodNamesByGroup.forEach { key, value ->
+            testGroups.add(TestGroup(key, value))
+        }
+
+        return AvailableTestsDto(testGroups)
     }
 
     override fun getTestSessions(): List<TestSessionsDto> {

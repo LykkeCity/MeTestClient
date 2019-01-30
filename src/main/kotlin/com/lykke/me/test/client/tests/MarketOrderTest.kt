@@ -14,6 +14,7 @@ import java.math.BigDecimal
 import javax.annotation.PostConstruct
 
 @MeTest
+@TestGroup("MarketOrderTest")
 class MarketOrderTest {
 
     private lateinit var meClient: MeClient
@@ -40,7 +41,7 @@ class MarketOrderTest {
         CLIENT2 = clients[1]
 
         MARKET_ORDER_TEST_CONFIG = config.matchingEngineTestClient.marketOrderTestConfig
-        val configAssetPair = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[0]
+        val configAssetPair = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[3]
         ASSET_PAIR1 = AssetPair(configAssetPair.assetPairId, configAssetPair.assetPairAccuracy,
                 Asset(configAssetPair.baseAssetId, configAssetPair.baseAssetAccuracy),
                 Asset(configAssetPair.quotingAssetId, configAssetPair.quotingAssetAccuracy))
