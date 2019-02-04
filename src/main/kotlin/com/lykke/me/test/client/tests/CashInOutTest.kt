@@ -46,7 +46,7 @@ class CashInOutTest {
         CLIENT2 = availableClients[1]
         CLIENT3 = availableClients[2]
         ASSET1 = assets.baseAssetId
-        ASSET1 = assets.quotingAssetId
+        ASSET2 = assets.quotingAssetId
     }
 
     fun cashInTest() {
