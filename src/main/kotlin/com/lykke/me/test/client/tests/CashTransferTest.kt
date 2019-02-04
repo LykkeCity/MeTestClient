@@ -13,6 +13,7 @@ import java.math.BigDecimal
 import javax.annotation.PostConstruct
 
 @MeTest
+@TestGroup("CashTransferTest")
 class CashTransferTest {
     private companion object {
         val MESSAGE_COUNT = 10_000
@@ -24,6 +25,8 @@ class CashTransferTest {
 
     private lateinit var CLIENT3: String
 
+    private lateinit var ASSET1: String
+
     @Autowired
     private lateinit var client: MeClient
 
@@ -33,18 +36,18 @@ class CashTransferTest {
     @Autowired
     private lateinit var messageBuilder: MessageBuilder
 
-
     @PostConstruct
     private fun init() {
         val availableClients = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()
         CLIENT1 = availableClients[0]
         CLIENT2 = availableClients[1]
         CLIENT3 = availableClients[2]
+        ASSET1 = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[1].baseAssetId
     }
 
     fun trasferFromClient1ToClient2() {
-        client.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, "BTC", BigDecimal.valueOf(1000.0)))
-        generateMessages(MESSAGE_COUNT, getStrategy(CLIENT1, CLIENT2, "BTC", BigDecimal.valueOf(0.1))).forEach(client::sendMessage)
+        client.sendMessage(messageBuilder.buildCashInOutMessage(CLIENT1, ASSET1, BigDecimal.valueOf(1000.0)))
+        generateMessages(MESSAGE_COUNT, getStrategy(CLIENT1, CLIENT2, ASSET1, BigDecimal.valueOf(0.1))).forEach(client::sendMessage)
     }
 
 

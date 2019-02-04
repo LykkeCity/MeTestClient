@@ -15,6 +15,7 @@ import java.math.BigDecimal
 import javax.annotation.PostConstruct
 
 @MeTest
+@TestGroup("LimitOrderTest")
 class LimitOrderTest {
 
     private lateinit var meClient: MeClient
@@ -38,7 +39,7 @@ class LimitOrderTest {
     private fun init() {
         CLIENT1 = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()[0]
         CLIENT2 = config.matchingEngineTestClient.testPrerequisitesConfig.clientsConfig.clients.toList()[1]
-        val assetPairConfig = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[0]
+        val assetPairConfig = config.matchingEngineTestClient.testPrerequisitesConfig.assetsConfig.toList()[2]
         ASSET_PAIR = AssetPair(assetPairConfig.assetPairId, assetPairConfig.assetPairAccuracy,
                 Asset(assetPairConfig.baseAssetId, assetPairConfig.baseAssetAccuracy),
                 Asset(assetPairConfig.quotingAssetId, assetPairConfig.quotingAssetAccuracy))

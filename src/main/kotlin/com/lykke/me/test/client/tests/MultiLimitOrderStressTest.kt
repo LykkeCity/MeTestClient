@@ -11,6 +11,7 @@ import org.apache.log4j.Logger
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+@TestGroup("MultiLimitOrderTests")
 class MultiLimitOrderStressTest(private val meClient: MeClient,
                                 private val meClientForSyncInteraction: MeClient,
                                 private val messageBuilder: MessageBuilder,
@@ -35,7 +36,7 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
         result.toList()
     }()
 
-    private val assetPairConfig = testPrerequisitesConfig.assetsConfig.first()
+    private val assetPairConfig = testPrerequisitesConfig.assetsConfig.toList()[4]
     private val assetPair = AssetPair(assetPairConfig.assetPairId,
             assetPairConfig.assetPairAccuracy,
             Asset(assetPairConfig.baseAssetId, assetPairConfig.baseAssetAccuracy),
