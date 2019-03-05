@@ -1,7 +1,7 @@
 package com.lykke.me.test.client.service.impl
 
-import com.lykke.me.test.client.MeListener
-import com.lykke.me.test.client.MeSubscriber
+import com.lykke.me.subscriber.MeListener
+import com.lykke.me.subscriber.MeSubscriber
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.service.TestMetricService
 import org.springframework.beans.factory.annotation.Autowired

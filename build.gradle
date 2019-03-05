@@ -37,13 +37,12 @@ ext {
 	springfox_swagger2 = "2.9.2"
 	springfox_swagger_ui = "2.9.2"
 	reflections_version = "0.9.11"
-	log4j_version = "1.2.17"
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 	implementation "org.jetbrains.kotlin:kotlin-reflect"
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -54,8 +53,11 @@ dependencies {
 	compile "io.springfox:springfox-swagger-ui:$springfox_swagger_ui"
 
 	compile "org.reflections:reflections:$reflections_version"
-	compile "log4j:log4j:$log4j_version"
-    compile 'org.bitbucket.lykke:kotlin-utils:0.0.7-SNAPSHOT'
+	compile 'org.bitbucket.lykke:me-message-subscriber:1.0.0-SNAPSHOT'
+}
+
+configurations {
+	compile.exclude module: 'spring-boot-starter-logging'
 }
 
 compileKotlin {

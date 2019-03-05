@@ -1,14 +1,14 @@
 package com.lykke.me.test.client.spring.config
 
+import com.lykke.me.subscriber.MeListener
+import com.lykke.me.subscriber.incoming.events.MeEvent
+import com.lykke.me.subscriber.rabbitmq.MeRabbitMqProtoEventListener
 import com.lykke.me.test.client.MeBlockingClient
 import com.lykke.me.test.client.MeClient
-import com.lykke.me.test.client.MeListener
 import com.lykke.me.test.client.config.Config
-import com.lykke.me.test.client.incoming.events.MeEvent
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilder
 import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilderImpl
-import com.lykke.me.test.client.rabbitmq.MeRabbitMqProtoEventListener
 import com.lykke.me.test.client.socket.MeSocketProtoBlockingClient
 import com.lykke.me.test.client.socket.MeSocketProtoClient
 import com.lykke.me.test.client.socket.MeSocketProtoResponseListener
