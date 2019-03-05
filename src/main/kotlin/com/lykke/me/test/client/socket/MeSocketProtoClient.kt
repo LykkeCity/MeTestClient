@@ -5,7 +5,7 @@ import com.lykke.me.test.client.outgoing.messages.Message
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 import com.lykke.me.test.client.outgoing.messages.serialization.proto.factories.MessageProtoSerializerFactory
 import com.lykke.me.test.client.outgoing.messages.serialization.proto.serializers.ProtoMessageWrapper
-import org.apache.log4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -20,7 +20,7 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
     : MeClient, Thread(MeSocketProtoClient::class.java.name) {
 
     companion object {
-        private val LOGGER = Logger.getLogger(MeSocketProtoClient::class.java.name)
+        private val LOGGER = LoggerFactory.getLogger(MeSocketProtoClient::class.java.name)
         private const val DELAY = 1000L
     }
 
@@ -75,7 +75,7 @@ class MeSocketProtoClient(private val responseListener: MeSocketProtoResponseLis
     }
 
     private fun connect() {
-        LOGGER.info("Connecting to Matching Engine")
+        LOGGER.info("Connecting to Matching Engine ($host:$port)")
         socket = Socket(host, port)
         while (!socket!!.isConnected) {
             LOGGER.info("Waiting socket server")

@@ -1,0 +1,31 @@
+<Configuration>
+    <Appenders>
+        <RollingRandomAccessFile name="ServerLog" filePattern="../log/server.log.%d{yyyy-MM-dd}"
+                                 fileName="../log/server.log"
+                                 immediateFlush="true">
+            <PatternLayout>
+                <Pattern>%d{dd-MM HH:mm:ss:SSS} %p [%t] [%c{1}] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingRandomAccessFile>
+    </Appenders>
+    <Loggers>
+        <Root level="debug" additivity="false">
+            <AppenderRef ref="ServerLog"/>
+        </Root>
+
+        <Logger name ="org.reflections" level="info">
+        </Logger>
+
+        <Logger name="org.springframework" level="info">
+        </Logger>
+
+        <Logger name="springfox" level="info">
+        </Logger>
+
+        <Logger name="org.hibernate" level="info">
+        </Logger>
+    </Loggers>
+</Configuration>
