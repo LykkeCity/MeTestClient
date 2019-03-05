@@ -7,7 +7,7 @@ import com.lykke.me.test.client.entity.AssetPair
 import com.lykke.me.test.client.outgoing.messages.MultiLimitOrderMessage
 import com.lykke.me.test.client.outgoing.messages.common.OrderCancelMode
 import com.lykke.me.test.client.outgoing.messages.utils.MessageBuilder
-import org.apache.log4j.Logger
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -18,7 +18,7 @@ class MultiLimitOrderStressTest(private val meClient: MeClient,
                                 config: Config) {
 
     companion object {
-        private val LOGGER = Logger.getLogger(MultiLimitOrderStressTest::class.java.name)
+        private val LOGGER = LoggerFactory.getLogger(MultiLimitOrderStressTest::class.java.name)
     }
 
     private val multiOrderStressTestConfig = config.matchingEngineTestClient.multiOrderStressTest

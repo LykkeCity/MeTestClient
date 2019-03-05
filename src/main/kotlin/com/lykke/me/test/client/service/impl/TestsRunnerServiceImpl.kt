@@ -8,7 +8,7 @@ import com.lykke.me.test.client.service.RunTestsPolicy
 import com.lykke.me.test.client.socket.MeClientFactory
 import com.lykke.me.test.client.utils.Transformer
 import com.lykke.me.test.client.web.dto.TestSessionsDto
-import org.apache.log4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
@@ -24,7 +24,7 @@ import java.util.concurrent.Future
 class TestsRunnerServiceImpl : TestsRunnerService {
 
     companion object {
-        private val logger = Logger.getLogger(TestsRunnerServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(TestsRunnerServiceImpl::class.java)
         private const val ME_CLIENT_FIELD_NAME = "meClient"
     }
 
