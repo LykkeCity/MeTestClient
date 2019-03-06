@@ -1,14 +1,14 @@
 package com.lykke.me.test.client.socket
 
-import com.lykke.me.subscriber.AbstractMeListener
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.incoming.response.deserialization.proto.factories.ResponseProtoDeserializerFactory
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 import com.lykke.me.test.utils.IntUtils
+import com.lykke.utils.notification.AbstractListener
 import org.slf4j.LoggerFactory
 import java.io.DataInputStream
 
-class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
+class MeSocketProtoResponseListener : AbstractListener<Response>() {
 
     class ResponseHandler(private val inputStream: DataInputStream,
                           private val onStop: () -> Unit,
