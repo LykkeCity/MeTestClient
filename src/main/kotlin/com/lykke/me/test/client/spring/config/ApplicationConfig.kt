@@ -2,7 +2,7 @@ package com.lykke.me.test.client.spring.config
 
 import com.lykke.me.test.client.config.Config
 import com.lykke.utils.config.ConfigInitializer
-import org.apache.log4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -11,7 +11,7 @@ import org.springframework.core.env.Environment
 open class ApplicationConfig {
 
     companion object {
-        private val LOGGER = Logger.getLogger(ApplicationConfig::class.java.name)
+        private val LOGGER = LoggerFactory.getLogger(ApplicationConfig::class.java.name)
     }
 
     @Bean

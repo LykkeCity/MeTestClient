@@ -1,21 +1,21 @@
 package com.lykke.me.test.client.socket
 
-import com.lykke.me.test.client.AbstractMeListener
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.incoming.response.deserialization.proto.factories.ResponseProtoDeserializerFactory
 import com.lykke.me.test.client.outgoing.messages.common.MessageType
 import com.lykke.me.test.utils.IntUtils
-import org.apache.log4j.Logger
+import com.lykke.utils.notification.AbstractListener
+import org.slf4j.LoggerFactory
 import java.io.DataInputStream
 
-class MeSocketProtoResponseListener : AbstractMeListener<Response>() {
+class MeSocketProtoResponseListener : AbstractListener<Response>() {
 
     class ResponseHandler(private val inputStream: DataInputStream,
                           private val onStop: () -> Unit,
                           private val listener: MeSocketProtoResponseListener) : Thread(ResponseHandler::class.java.name) {
 
         companion object {
-            private val LOGGER = Logger.getLogger(ResponseHandler::class.java.name)
+            private val LOGGER = LoggerFactory.getLogger(ResponseHandler::class.java.name)
         }
 
         @Volatile

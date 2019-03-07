@@ -2,11 +2,11 @@ package com.lykke.me.test.client.socket
 
 import com.lykke.me.test.client.MeBlockingClient
 import com.lykke.me.test.client.MeClient
-import com.lykke.me.test.client.MeListener
-import com.lykke.me.test.client.MeSubscriber
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.outgoing.messages.Message
-import org.apache.log4j.Logger
+import com.lykke.utils.notification.Listener
+import com.lykke.utils.notification.Subscriber
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.atomic.AtomicLong
 import javax.annotation.PostConstruct
@@ -14,20 +14,20 @@ import javax.annotation.PostConstruct
 class MeSocketProtoBlockingClient(requestResponseCountThreshold: Int): MeBlockingClient {
 
     companion object {
-        private val LOGGER = Logger.getLogger(MeSocketProtoBlockingClient::class.java.name)
+        private val LOGGER = LoggerFactory.getLogger(MeSocketProtoBlockingClient::class.java.name)
     }
 
     @Autowired
     private lateinit var meClient: MeClient
 
     @Autowired
-    private lateinit var meResponseListener: MeListener<Response>
+    private lateinit var meResponseListener: Listener<Response>
 
     @Autowired
     private lateinit var meClientForSyncInteraction: MeClient
 
     @Autowired
-    private lateinit var meResponseListenerForSyncInteraction: MeListener<Response>
+    private lateinit var meResponseListenerForSyncInteraction: Listener<Response>
 
     private var messagesSend =  AtomicLong(0)
     private var messageSyncSend = AtomicLong(0)
@@ -37,13 +37,13 @@ class MeSocketProtoBlockingClient(requestResponseCountThreshold: Int): MeBlockin
 
     @PostConstruct
     fun init() {
-        meResponseListener.subscribe(object : MeSubscriber<Response> {
+        meResponseListener.subscribe(object : Subscriber<Response> {
             override fun notify(message: Response) {
                 sendMessagesLatch.incrementResponseCount()
             }
         })
 
-        meResponseListenerForSyncInteraction.subscribe(object : MeSubscriber<Response> {
+        meResponseListenerForSyncInteraction.subscribe(object : Subscriber<Response> {
             override fun notify(message: Response) {
                 sendMessagesLatchForSync.incrementResponseCount()
             }

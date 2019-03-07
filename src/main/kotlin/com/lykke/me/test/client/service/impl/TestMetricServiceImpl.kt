@@ -1,9 +1,9 @@
 package com.lykke.me.test.client.service.impl
 
-import com.lykke.me.test.client.MeListener
-import com.lykke.me.test.client.MeSubscriber
 import com.lykke.me.test.client.incoming.response.Response
 import com.lykke.me.test.client.service.TestMetricService
+import com.lykke.utils.notification.Listener
+import com.lykke.utils.notification.Subscriber
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -13,10 +13,10 @@ import javax.annotation.PostConstruct
 @Service
 class TestMetricServiceImpl: TestMetricService {
     @Autowired
-    private lateinit var meResponseListenerForSyncInteraction: MeListener<Response>
+    private lateinit var meResponseListenerForSyncInteraction: Listener<Response>
 
     @Autowired
-    private lateinit var meResponseListener: MeListener<Response>
+    private lateinit var meResponseListener: Listener<Response>
 
     private val currentMessageCount = AtomicLong(0)
 
@@ -29,13 +29,13 @@ class TestMetricServiceImpl: TestMetricService {
 
     @PostConstruct
     private fun init() {
-        meResponseListenerForSyncInteraction.subscribe(object: MeSubscriber<Response> {
+        meResponseListenerForSyncInteraction.subscribe(object: Subscriber<Response> {
             override fun notify(message: Response) {
                 currentMessageCount.incrementAndGet()
             }
         })
 
-        meResponseListener.subscribe(object: MeSubscriber<Response> {
+        meResponseListener.subscribe(object: Subscriber<Response> {
             override fun notify(message: Response) {
                 currentMessageCount.incrementAndGet()
             }
